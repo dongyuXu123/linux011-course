@@ -1,0 +1,4 @@
+[day02] boot: reading stage2 from disk (4 sectors)...
+[day02] boot: read ok, jumping to 0x10000
+[day02] stage2 is running at linear 0x10000
+[day02] disk load verified: 4 sectors ok
