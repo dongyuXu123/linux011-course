@@ -1,0 +1,3 @@
+[day03] real mode: loading PM stage, opening A20...
+[day03] protected mode entered (32-bit)
+[day03] VGA text buffer written, halt.

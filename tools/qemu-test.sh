@@ -27,10 +27,10 @@ SERIAL="$OUT/serial.log"
 SOCK="$OUT/qmp.sock"
 rm -f "$SERIAL" "$SOCK" "$OUT/screen.ppm" "$OUT/screen.png"
 
-DRIVE=(); MEDIA_ARGS=()
+DRIVE=()
 case "$IMAGE" in
-  *.iso) MEDIA_ARGS=(-cdrom "$IMAGE" -boot d);;
-  *.img) MEDIA_ARGS=(-fda "$IMAGE" -boot a);;
+  *.iso) DRIVE=(-drive "file=$IMAGE,media=cdrom,format=raw" -boot d);;
+  *.img) DRIVE=(-drive "file=$IMAGE,if=floppy,format=raw" -boot a);;
   *) echo "unsupported image type" >&2; exit 3;;
 esac
 
@@ -38,16 +38,16 @@ timeout -k 5 $((TIMEOUT + 10)) \
   qemu-system-i386 -m 32M -display none -vga std -no-reboot \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
     -qmp unix:"$SOCK",server,nowait \
-    -serial stdio "${MEDIA_ARGS[@]}" $EXTRA \
+    -serial stdio "${DRIVE[@]}" $EXTRA \
     >"$SERIAL" 2>"$OUT/qemu.err" &
 QPID=$!
 for i in $(seq 1 50); do [ -S "$SOCK" ] && break; sleep 0.1; done
 
 STATUS=FAIL; MATCHED="?"; DUR=0
 if [ -n "$EXPECT" ] && [ -f "$EXPECT" ]; then
-  MATCH_OUT=$(python3 "$REPO/tools/expect-match.py" "$SERIAL" "$EXPECT" "$TIMEOUT")
+  RC=0
+  MATCH_OUT=$(python3 "$REPO/tools/expect-match.py" "$SERIAL" "$EXPECT" "$TIMEOUT") || RC=$?
   MATCHED="${MATCH_OUT%% *}"
-  RC=$?
   DUR=$(echo "$MATCH_OUT" | awk '{print $2}')
   if [ "$RC" -eq 0 ]; then STATUS=PASS; fi
 else
