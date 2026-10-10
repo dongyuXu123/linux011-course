@@ -1,0 +1,6 @@
+[day06] head.S done: paging enabled
+[day06] CR0.PG=1, page_dir at 
+[day06] raising vector 0 via int $0 ...
+[day06] exception 0x00000000 (#DE divide error) handled, returning
+[day06] returned from #DE handler via IDT
+[day06] all done
