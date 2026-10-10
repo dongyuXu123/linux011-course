@@ -1,0 +1,4 @@
+[day04] booted by GRUB, entered kmain
+[day04] multiboot magic ok
+[day04] mem_lower=
+[day04] exiting qemu via port 0xF4
