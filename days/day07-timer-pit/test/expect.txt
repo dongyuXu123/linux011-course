@@ -1,0 +1,5 @@
+[day07] enabling PIC remap + PIT (100Hz)
+[day07] interrupts on, waiting 3 seconds...
+[day07] tick 100 (1s heartbeat)
+[day07] tick 200 (2s heartbeat)
+heartbeat ok
