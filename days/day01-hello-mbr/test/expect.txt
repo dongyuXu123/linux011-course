@@ -1,0 +1,3 @@
+# day01 验收断言：以下行必须按顺序出现在 QEMU COM1 串口日志中
+[day01] hello from MBR (COM1 115200)
+[day01] boot sector done, halt.

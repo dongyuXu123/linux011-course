@@ -1,15 +1,18 @@
 # ============ 共享构建规则：每课 Makefile 只声明差异 ============
 #
+# 使用约定：总是 `make -C days/dayNN <target>`，每课 Makefile 开头：
+#   REPO := $(abspath $(CURDIR)/../..)
+#   include $(REPO)/mk/kernel.mk
+#   include $(REPO)/mk/test.mk
+#
 # 每课 Makefile 需要提供的变量：
 #   DAY    := day04-grub-multiboot     # 目录名（用于测试报告）
 #   IMG    := iso | mbr                # 产物类型：GRUB ISO 或 裸引导软盘镜像
 #   OBJS   := boot/multiboot.o kernel/main.o ...   # 参与链接的目标文件
 #   MODULES:= boot/initrd.img          # (可选) 放入 ISO /boot 的附加文件(initrd)
-#
-# 提供：all / clean；配合 mk/test.mk 提供 test / run。
 
-DAY_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-REPO    := $(patsubst %/,%,$(dir $(abspath $(DAY_DIR)/../)))
+DAY_DIR := $(CURDIR)
+REPO    := $(abspath $(DAY_DIR)/../..)
 BUILD   := $(DAY_DIR)/build
 
 CC      := gcc
