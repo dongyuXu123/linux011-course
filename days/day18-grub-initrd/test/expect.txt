@@ -1,0 +1,7 @@
+[day18] GRUB loaded 1 module(s), initrd at
+[day18] initrd: added hello
+[day18] initrd: 1 file(s) into ramfs
+[day18] linux011 mini shell
+run: exec hello at 0x80000
+[day17] hello world, exec'd from ramfs!
+run: hello (pid 1) exited with 0

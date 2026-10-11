@@ -58,7 +58,7 @@ $(BUILD)/kernel.elf: $(OBJS) $(LINKER)
 	@mkdir -p $(BUILD)
 	$(LD) $(LDFLAGS) -T $(LINKER) $(OBJS) -o $@
 
-$(BUILD)/artifact: $(BUILD)/kernel.elf
+$(BUILD)/artifact: $(BUILD)/kernel.elf $(MODULES)
 	@rm -rf $(ISO_ROOT) && mkdir -p $(ISO_ROOT)/boot/grub
 	cp $(BUILD)/kernel.elf $(ISO_ROOT)/boot/
 ifdef MODULES
