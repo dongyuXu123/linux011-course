@@ -25,5 +25,8 @@ SECTIONS
     *(.bss .bss.*)
   }
 
+  . = ALIGN(4096);
+  PROVIDE(_kernel_end = .);
+
   /DISCARD/ : { *(.eh_frame) *(.comment) *(.note*) }
 }

@@ -1,0 +1,6 @@
+[day10] paging pool ready, kernel_end=
+[day10] pool exhausted after
+[day10] free pages now: 0
+[day10] double free at
+[day10] re-alloc ok
+[day10] mm ok
