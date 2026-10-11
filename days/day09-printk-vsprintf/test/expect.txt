@@ -1,0 +1,4 @@
+[day09] dec=-42 hex=0x2a str=linux011 char=Z
+[day09] pad [00042] [    7] [3    | end
+[day09] str [  abc] [abc  ] [ab]
+[day09] 100% complete, vsprintf ok
