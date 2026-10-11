@@ -7,4 +7,4 @@ OBJS := boot/multiboot.o boot/head.o kernel/trap_entry.o kernel/irq_entry.o \
 REPO := $(abspath $(CURDIR)/../..)
 include $(REPO)/mk/kernel.mk
 include $(REPO)/mk/test.mk
-KEYS := h,i,bs,i,ret
+KEYS := h,i,backspace,i,ret

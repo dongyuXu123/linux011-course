@@ -49,8 +49,10 @@ if [ -n "$KEYS" ] && [ -S "$SOCK" ]; then
   sleep 3                       # 等 GRUB 引导完, 太早的键会被丢掉
   IFS=',' read -ra KEYLIST <<< "$KEYS"
   for k in "${KEYLIST[@]}"; do
-    python3 "$REPO/tools/qmp.py" "$SOCK" send-key "{\"keys\":[{\"type\":\"qcode\",\"data\":\"$k\"}]}" >/dev/null 2>&1
-    sleep 0.6
+    if ! python3 "$REPO/tools/qmp.py" "$SOCK" send-key "{\"keys\":[{\"type\":\"qcode\",\"data\":\"$k\"}]}" >/dev/null; then
+      echo "WARN: send-key '$k' 失败(检查 qcode 拼写)" >&2
+    fi
+    sleep 0.8
   done
 fi
 
