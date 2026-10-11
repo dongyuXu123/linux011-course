@@ -6,6 +6,7 @@ TIMEOUT ?= 45
 SCREEN  ?= 1
 EXTRA   ?=
 PIXEL   ?=
+MOUSE   ?=
 KEYS    ?=
 
 .PHONY: test run report
@@ -15,7 +16,8 @@ test: $(BUILD)/artifact
 	  --timeout $(TIMEOUT) --screen $(SCREEN) --name $(DAY) \
 	  $(if $(KEYS),--send-keys "$(KEYS)",) \
 	  $(if $(EXTRA),--extra-qemu-args "$(EXTRA)",) \
-	  $(if $(PIXEL),--pixel "$(PIXEL)",)
+	  $(if $(PIXEL),--pixel "$(PIXEL)",) \
+	  $(if $(MOUSE),--mouse "$(MOUSE)",)
 
 run: $(BUILD)/artifact
 	$(QEMU) $(QEMU_ARGS) $(if $(filter iso,$(IMG)),-cdrom $(BUILD)/os.iso -boot d,-fda $(BUILD)/os.img -boot a)

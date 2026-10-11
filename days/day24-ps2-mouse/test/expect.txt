@@ -1,0 +1,3 @@
+[day24] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day24] ps/2 mouse ready, move the cursor
+[day24] cursor at (380,280) btn=0

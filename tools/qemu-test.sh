@@ -6,7 +6,7 @@
 # 退出码: 0=PASS 1=FAIL
 set -u
 
-IMAGE=""; EXPECT=""; TIMEOUT=45; NAME="test"; SCREEN=1; EXTRA=""; KEYS=""; PIXEL_SPEC=""
+IMAGE=""; EXPECT=""; TIMEOUT=45; NAME="test"; SCREEN=1; EXTRA=""; KEYS=""; PIXEL_SPEC=""; MOUSE_SPEC=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --image) IMAGE="$2"; shift 2;;
@@ -17,6 +17,7 @@ while [ $# -gt 0 ]; do
     --extra-qemu-args) EXTRA="$2"; shift 2;;
     --send-keys) KEYS="$2"; shift 2;;
     --pixel) PIXEL_SPEC="$2"; shift 2;;
+    --mouse) MOUSE_SPEC="$2"; shift 2;;
     *) echo "unknown arg $1" >&2; exit 3;;
   esac
 done
@@ -44,6 +45,20 @@ timeout -k 5 $((TIMEOUT + 10)) \
     >"$SERIAL" 2>"$OUT/qemu.err" &
 QPID=$!
 for i in $(seq 1 50); do [ -S "$SOCK" ] && break; sleep 0.1; done
+
+# 鼠标注入: --mouse "dx,dy[,button]" (input-send-event 相对位移)
+if [ -n "$MOUSE_SPEC" ] && [ -S "$SOCK" ]; then
+  sleep 4
+  DX="${MOUSE_SPEC%%,*}"; REST="${MOUSE_SPEC#*,}"
+  DY="${REST%%,*}"; BTN="${REST#*,}"
+  [ "$BTN" = "$REST" ] && BTN=""
+  EV="{\"type\":\"rel\",\"data\":{\"axis\":\"x\",\"value\":$DX}},{\"type\":\"rel\",\"data\":{\"axis\":\"y\",\"value\":$DY}}"
+  if [ -n "$BTN" ]; then
+    EV="$EV,{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":$BTN}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":$BTN}}"
+  fi
+  python3 "$REPO/tools/qmp.py" "$SOCK" input-send-event "{\"events\":[$EV]}" >/dev/null
+  sleep 2
+fi
 
 # 按 qcode 逗号列表向 guest 发键(键盘课用): --send-keys "h,i,ret"
 if [ -n "$KEYS" ] && [ -S "$SOCK" ]; then
