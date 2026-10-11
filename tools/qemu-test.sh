@@ -46,7 +46,7 @@ for i in $(seq 1 50); do [ -S "$SOCK" ] && break; sleep 0.1; done
 
 # 按 qcode 逗号列表向 guest 发键(键盘课用): --send-keys "h,i,ret"
 if [ -n "$KEYS" ] && [ -S "$SOCK" ]; then
-  sleep 1
+  sleep 3                       # 等 GRUB 引导完, 太早的键会被丢掉
   IFS=',' read -ra KEYLIST <<< "$KEYS"
   for k in "${KEYLIST[@]}"; do
     python3 "$REPO/tools/qmp.py" "$SOCK" send-key "{\"keys\":[{\"type\":\"qcode\",\"data\":\"$k\"}]}" >/dev/null 2>&1
