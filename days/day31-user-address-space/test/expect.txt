@@ -1,0 +1,6 @@
+[day31] selftest begin
+[day31] mm: 200-page alloc/verify/free ok
+[day31] selftest: all subsystems ok
+[day31] linux011-course 0.31 (0.11-style address spaces)
+[day31] /sbin/init running in ring 3
+[init] forked child pid 2
