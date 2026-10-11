@@ -1,0 +1,10 @@
+DAY  := day08-keyboard-tty
+IMG  := iso
+OBJS := boot/multiboot.o boot/head.o kernel/trap_entry.o kernel/irq_entry.o \
+        kernel/console.o kernel/traps.o kernel/irq.o kernel/timer.o \
+        kernel/keyboard.o kernel/main.o
+
+REPO := $(abspath $(CURDIR)/../..)
+include $(REPO)/mk/kernel.mk
+include $(REPO)/mk/test.mk
+KEYS := h,i,bs,i,ret

@@ -6,7 +6,7 @@
 # 退出码: 0=PASS 1=FAIL
 set -u
 
-IMAGE=""; EXPECT=""; TIMEOUT=45; NAME="test"; SCREEN=1; EXTRA=""
+IMAGE=""; EXPECT=""; TIMEOUT=45; NAME="test"; SCREEN=1; EXTRA=""; KEYS=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --image) IMAGE="$2"; shift 2;;
@@ -15,6 +15,7 @@ while [ $# -gt 0 ]; do
     --name) NAME="$2"; shift 2;;
     --screen) SCREEN="$2"; shift 2;;
     --extra-qemu-args) EXTRA="$2"; shift 2;;
+    --send-keys) KEYS="$2"; shift 2;;
     *) echo "unknown arg $1" >&2; exit 3;;
   esac
 done
@@ -42,6 +43,16 @@ timeout -k 5 $((TIMEOUT + 10)) \
     >"$SERIAL" 2>"$OUT/qemu.err" &
 QPID=$!
 for i in $(seq 1 50); do [ -S "$SOCK" ] && break; sleep 0.1; done
+
+# 按 qcode 逗号列表向 guest 发键(键盘课用): --send-keys "h,i,ret"
+if [ -n "$KEYS" ] && [ -S "$SOCK" ]; then
+  sleep 1
+  IFS=',' read -ra KEYLIST <<< "$KEYS"
+  for k in "${KEYLIST[@]}"; do
+    python3 "$REPO/tools/qmp.py" "$SOCK" send-key "{\"keys\":[{\"type\":\"qcode\",\"data\":\"$k\"}]}" >/dev/null 2>&1
+    sleep 0.6
+  done
+fi
 
 STATUS=FAIL; MATCHED="?"; DUR=0
 if [ -n "$EXPECT" ] && [ -f "$EXPECT" ]; then

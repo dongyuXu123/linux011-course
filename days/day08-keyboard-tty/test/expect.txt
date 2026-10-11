@@ -1,0 +1,3 @@
+[day08] console ready, waiting for keystrokes
+[day08] line='hi'
+[day08] keyboard+tty ok
