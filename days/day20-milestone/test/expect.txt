@@ -1,0 +1,9 @@
+[day20] selftest begin
+[day20] mm: 200-page alloc/verify/free ok
+[day20] timer: jiffies ticking
+[day20] selftest: all subsystems ok
+[day20] linux011-course 0.20 (terminal milestone)
+[day19] /sbin/init running in ring 3 (pid 1)
+forked child pid 2
+[day17] hello world, exec'd from ramfs!
+[init] child 2 exited with 0
