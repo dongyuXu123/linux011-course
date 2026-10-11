@@ -86,3 +86,29 @@
 
 - `source/`、`docs/`（模块文档、精读注释、校验脚本）原样保留，继续由 `scripts/check-source-study.py` 与 `source.sha256` 保护。
 - 动手轨的代码是**教学重写**（现代工具链 + GRUB + 渐进结构），不是对 0.11 的逐行拷贝；凡借用 0.11 设计/片段（printk、memory.c、sched.c、fork.c、system_call.s、tty 等）都在讲义中注明出处。
+
+---
+
+## 阶段二（day31+）：内核子系统全面向 Linux 0.11 靠拢 × 图形化按 30dayMakeOS 补全
+
+**定位（2026-10-11 与作者确认）**：程序内核（各大功能系统）向 Linux 0.11 的真实实现靠拢——
+数据结构、算法、代码组织都对标 `source/`；图形化部分参考《30 天自制操作系统》的功能清单，
+在这条 0.11 血统的内核之上实现。阶段一（day01-30）的"现代化教学内核"作为骨架，
+阶段二逐子系统替换为 0.11 的真实设计，图形栈保持并继续按 30dayMakeOS 路线补全功能。
+
+| 天 | 课题 | 0.11 对标 | 30dayMakeOS 对标 |
+|---|---|---|---|
+| 31 | 每进程地址空间：64MB/进程线性布局 + LDT + 每任务页目录 | `mm/memory.c` `copy_mem()` | — |
+| 32 | 0.11 式 fork/exec（页复制、按需调页 do_no_page） | `fork.c` `exec.c` `memory.c` | — |
+| 33 | 中断驱动块设备 + request 队列 + ll_rw_blk | `blk_drv/hd.c` `ll_rw_blk.c` | — |
+| 34 | Minix v1 文件系统：超级块/位图/inode/buffer cache | `fs/*` `buffer.c` | — |
+| 35 | 持久化根文件系统 + mount；0.11 ABI 系统调用补全（open/read/lseek/stat…） | `fs/` `sys.c` | day18-20 |
+| 36 | TTY 完整行规程 + 多控制台 | `chr_drv/tty*` `console.c` | day26-28 |
+| 37 | 图形窗口 API：应用经系统调用创建/切换窗口（图形化接入 0.11 ABI） | — | day20(API) |
+| 38 | 应用程序：经 API 的图形应用（时钟/终端/文件浏览器） | — | day22-25 |
+| 39 | 文件操作进图形（cat/echo 落到 Minix fs）+ 窗口切换加速 | `fs/` | day27-28 |
+| 40 | 收官：完整 0.11 内核子集 + Haribote 式桌面 | 全部 | day30 |
+
+验收不变：每课 QEMU 自动测试（串口断言 + 截图 + 像素断言 + 键鼠注入）。
+已知取舍：任务切换保持软件切换（0.11 为 ljmp-TSS，QEMU 下实测不稳定，讲义对照两者）；
+其余子系统以"能对齐 0.11 源码结构"为第一优先级。
