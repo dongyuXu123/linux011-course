@@ -41,7 +41,7 @@ void do_irq(struct pt_regs *regs)
 {
     int irq = (int)regs->vector - 0x20;
     if (irq_handlers[irq])
-        irq_handlers[irq](regs);
+        irq_handlers[irq]`(regs)`;
     irq_eoi(irq);              /* 从片要先发 0xA0 再发 0x20 */
 }
 ```
