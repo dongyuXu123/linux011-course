@@ -27,7 +27,7 @@
 | 01 | hello-mbr | 512 字节引导扇区：UART 初始化、直接写 COM1 与 BIOS 打字 | `boot/bootsect.s` 的雏形 |
 | 02 | disk-loader | INT 13H 读盘：把内核扇区装进内存再跳转 | bootsect.s 的 `read_it` 循环 |
 | 03 | protected-mode | GDT、A20、CR0.PE：进入 32 位并直写 VGA 文本缓冲 | `boot/setup.s` 后半 |
-| 04 | **grub-multiboot** | Multiboot 规范头、grub.cfg、grub-mkrescue 生成可启动 ISO——**从今天起 GRUB 取代自写引导** | bootsect+setup 的"现代替代品" |
+| 04 | **grub-multiboot** | Multiboot 规范头(aout-kludge 平坦镜像)、grub.cfg、grub-mkrescue 生成可启动 ISO——**从今天起 GRUB 取代自写引导** | bootsect+setup 的"现代替代品" |
 | 05 | c-runtime | C 运行环境：栈、BSS 清零、early printk、解析 Multiboot memory map | setup.s 收集的内存参数 |
 | 06 | paging-idt | 0.11 式 head：4 张页表恒等映射 16MB、IDT、除零异常演示 | `boot/head.s` |
 | 07 | timer-pit | 8253/8259：可编程定时器、jiffies 心跳、中断现场 | `kernel/sched.c` 的 timer_interrupt |
@@ -38,7 +38,7 @@
 | 08 | keyboard-tty | 键盘中断 → 环形缓冲 → tty 层 → 控制台回显 | `kernel/chr_drv/` |
 | 09 | printk-vsprintf | printk + vsprintf 移植（%d %x %s %c） | `kernel/printk.c` `vsprintf.c` |
 | 10 | memory-manager | mem_map 物理页管理、页缺失处理、恒等映射下的按需分配 | `mm/memory.c` |
-| 11 | tasks-scheduler | task_struct、时钟轮转调度、两个内核任务轮流打印 | `kernel/sched.c` |
+| 11 | tasks-scheduler | task_struct、软件上下文切换、时钟轮转调度（0.11 的 ljmp-TSS 切换在讲义中对照） | `kernel/sched.c` |
 | 12 | fork-exit | fork/exit/wait：任务复制与回收 | `kernel/fork.c` `exit.c` |
 | 13 | syscall-ring3 | int 0x80 系统调用门、特权级 3、a.out 式用户程序 | `kernel/system_call.s` |
 | 14 | kernel-shell | 行编辑（退格/回车）+ 内置命令 shell（help/ps/uptime/clear） | 0.11 的 `/bin/sh` 前身 |
@@ -49,14 +49,14 @@
 | 15 | ramfs | 超级块/inode/bitmap 模型的内存文件系统，mount 框架 | `fs/super.c` `bitmap.c` |
 | 16 | ramfs-files | 文件读写、shell 增加 ls/cat/echo/write | `fs/file_dev.c` `read_write.c` |
 | 17 | exec-aout | 从 ramfs 加载用户程序执行（a.out 平坦格式） | `fs/exec.c` |
-| 18 | grub-initrd | GRUB `module` 命令加载 initrd：ramfs 落到引导盘镜像 | 0.11 的软盘根文件系统 |
+| 18 | grub-initrd | initrd 挂第二块 IDE 盘，内核用 ATA PIO 轮询读入 ramfs（GRUB2 的 multiboot1 `module` 实测不可用，讲义记录了这个坑） | 0.11 的软盘/硬盘根文件系统与 hd.c |
 | 19 | user-init | 用户态 /sbin/init：fork-exec-sh、rc 脚本、登录横幅 | `init/main.c` 的 init() |
 | 20 | milestone-terminal | 字符终端里程碑：中断/调度/内存压测自检，串口输出系统报告 | — |
 
 ### 第四周　图形桌面（day21–30）——呼应 30dayMakeOS 的收官之路
 | 天 | 课题 | 内容 | 对照 30dayMakeOS |
 |---|---|---|---|
-| 21 | framebuffer-vbe | GRUB VBE 设置 640×480×32 线性帧缓冲、内核页表扩展映射 | day03–04（画面显示） |
+| 21 | framebuffer-vbe | QEMU/Bochs VBE Dispi 端口设 640×480×32、LFB(PCI BAR 0xFD000000) 内核页表扩展映射 | day03–04（画面显示） |
 | 22 | font-rendering | 8×16 ASCII 点阵字体、putfont/putstr 到帧缓冲 | day07–08（字符显示） |
 | 23 | drawing-api | 矩形/线/填充、脏矩形局部刷新 | day09–10（叠加处理） |
 | 24 | ps2-mouse | PS/2 辅助设备中断、三字节包解析、光标绘制 | day07（鼠标） |
