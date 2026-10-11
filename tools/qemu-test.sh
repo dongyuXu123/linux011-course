@@ -6,7 +6,7 @@
 # 退出码: 0=PASS 1=FAIL
 set -u
 
-IMAGE=""; EXPECT=""; TIMEOUT=45; NAME="test"; SCREEN=1; EXTRA=""; KEYS=""
+IMAGE=""; EXPECT=""; TIMEOUT=45; NAME="test"; SCREEN=1; EXTRA=""; KEYS=""; PIXEL_SPEC=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --image) IMAGE="$2"; shift 2;;
@@ -16,6 +16,7 @@ while [ $# -gt 0 ]; do
     --screen) SCREEN="$2"; shift 2;;
     --extra-qemu-args) EXTRA="$2"; shift 2;;
     --send-keys) KEYS="$2"; shift 2;;
+    --pixel) PIXEL_SPEC="$2"; shift 2;;
     *) echo "unknown arg $1" >&2; exit 3;;
   esac
 done
@@ -70,6 +71,13 @@ fi
 if [ "$SCREEN" = "1" ] && [ -S "$SOCK" ]; then
   python3 "$REPO/tools/qmp.py" "$SOCK" screendump "{\"filename\":\"$OUT/screen.ppm\"}" >/dev/null 2>&1 \
     && python3 "$REPO/tools/ppm2png.py" "$OUT/screen.ppm" "$OUT/screen.png" 2>/dev/null
+  if [ -n "$PIXEL_SPEC" ] && [ -f "$OUT/screen.ppm" ]; then
+    if python3 "$REPO/tools/pixel-assert.py" "$OUT/screen.ppm" "$PIXEL_SPEC"; then
+      :
+    else
+      STATUS=FAIL
+    fi
+  fi
 fi
 if [ -S "$SOCK" ]; then
   python3 "$REPO/tools/qmp.py" "$SOCK" quit >/dev/null 2>&1

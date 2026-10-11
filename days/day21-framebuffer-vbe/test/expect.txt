@@ -1,0 +1,3 @@
+[day21] framebuffer 640x480 pitch=2560 at
+[day21] gradient painted on LFB
+[day21] orange rect at (240,200)-(400,280)
