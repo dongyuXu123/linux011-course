@@ -1,0 +1,10 @@
+build/
+*.o
+*.d
+*.elf
+*.flat
+*.iso
+*.img
+*.bin
+*.ppm
+font8x8/
