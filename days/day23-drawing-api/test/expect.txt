@@ -1,0 +1,4 @@
+[day23] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day23] gradient painted on LFB
+[day23] drawing primitives demo
+[day23] lines + window frames drawn
