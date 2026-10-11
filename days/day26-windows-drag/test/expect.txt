@@ -1,0 +1,3 @@
+[day26] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day26] first refresh done
+[day26] window 'window A' grabbed

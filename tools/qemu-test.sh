@@ -46,18 +46,26 @@ timeout -k 5 $((TIMEOUT + 10)) \
 QPID=$!
 for i in $(seq 1 50); do [ -S "$SOCK" ] && break; sleep 0.1; done
 
-# 鼠标注入: --mouse "dx,dy[,button]" (input-send-event 相对位移)
+# 鼠标注入: --mouse "dx,dy[;dx,dy;dx,dy,down-left;dx,dy,up-left]"
+# 多步序列, 步间 1.5s; 事件 = 相对位移 + 可选按键按下/抬起
 if [ -n "$MOUSE_SPEC" ] && [ -S "$SOCK" ]; then
   sleep 4
-  DX="${MOUSE_SPEC%%,*}"; REST="${MOUSE_SPEC#*,}"
-  DY="${REST%%,*}"; BTN="${REST#*,}"
-  [ "$BTN" = "$REST" ] && BTN=""
-  EV="{\"type\":\"rel\",\"data\":{\"axis\":\"x\",\"value\":$DX}},{\"type\":\"rel\",\"data\":{\"axis\":\"y\",\"value\":$DY}}"
-  if [ -n "$BTN" ]; then
-    EV="$EV,{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":$BTN}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":$BTN}}"
-  fi
-  python3 "$REPO/tools/qmp.py" "$SOCK" input-send-event "{\"events\":[$EV]}" >/dev/null
-  sleep 2
+  IFS=';' read -ra MSTEPS <<< "$MOUSE_SPEC"
+  for st in "${MSTEPS[@]}"; do
+    [ -z "$st" ] && continue
+    DX="${st%%,*}"; REST="${st#*,}"
+    DY="${REST%%,*}"; ACT="${REST#*,}"
+    [ "$ACT" = "$REST" ] && ACT=""
+    EV="{\"type\":\"rel\",\"data\":{\"axis\":\"x\",\"value\":$DX}},{\"type\":\"rel\",\"data\":{\"axis\":\"y\",\"value\":$DY}}"
+    case "$ACT" in
+      down-left)  EV="$EV,{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"left\"}}";;
+      up-left)    EV="$EV,{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"left\"}}";;
+      click-left) EV="$EV,{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"left\"}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"left\"}}";;
+    esac
+    python3 "$REPO/tools/qmp.py" "$SOCK" input-send-event "{\"events\":[$EV]}" >/dev/null
+    sleep 1.5
+  done
+  sleep 1
 fi
 
 # 按 qcode 逗号列表向 guest 发键(键盘课用): --send-keys "h,i,ret"
