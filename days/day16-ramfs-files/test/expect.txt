@@ -1,0 +1,3 @@
+[day16] linux011 mini shell
+wrote 13 bytes to note
+hi from day16
