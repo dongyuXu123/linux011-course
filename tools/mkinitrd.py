@@ -10,5 +10,9 @@ for spec in sys.argv[2:]:
     data = open(path, "rb").read()
     nb = name.encode()
     buf += struct.pack("<I", len(nb)) + nb + struct.pack("<I", len(data)) + data
+PAD = 64 * 1024
+if len(buf) > PAD:
+    raise SystemExit(f"initrd too big: {len(buf)} > {PAD}")
+buf += b"\x00" * (PAD - len(buf))
 open(out, "wb").write(buf)
-print(f"initrd: {out} ({len(buf)} bytes)")
+print(f"initrd: {out} ({PAD} bytes padded)")

@@ -1,7 +1,7 @@
 ENTRY(_start)
 SECTIONS
 {
-  . = 1M;
+  . = 2M;
 
   .text BLOCK(4K) : ALIGN(4K)
   {
@@ -19,6 +19,7 @@ SECTIONS
   {
     *(.data .data.*)
   }
+  PROVIDE(_kernel_load_end = .);
 
   .bss BLOCK(4K) : ALIGN(4K)
   {

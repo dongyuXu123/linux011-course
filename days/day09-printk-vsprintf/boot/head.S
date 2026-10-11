@@ -29,6 +29,15 @@ head:
     cld
     cli
 
+    /* 双保险: 清 .bss(GRUB 对 aout-kludge 镜像应清 [load_end,bss_end),
+       这里再清一次, 平坦镜像绕过任何加载器差异 */
+    movl $_kernel_load_end, %edi
+    movl $_kernel_end, %ecx
+    subl %edi, %ecx
+    shrl $2, %ecx
+    xorl %eax, %eax
+    rep stosl
+
     /* ---- 顺序填 4096 个页表项: 项 i = 页帧 i | P|R|U ---- */
     movl $pg_table0, %ebx
     xorl %ecx, %ecx

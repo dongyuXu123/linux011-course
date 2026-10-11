@@ -58,15 +58,18 @@ $(BUILD)/kernel.elf: $(OBJS) $(LINKER)
 	@mkdir -p $(BUILD)
 	$(LD) $(LDFLAGS) -T $(LINKER) $(OBJS) -o $@
 
-$(BUILD)/artifact: $(BUILD)/kernel.elf $(MODULES)
+$(BUILD)/kernel.flat: $(BUILD)/kernel.elf
+	objcopy -O binary $< $@
+
+$(BUILD)/artifact: $(BUILD)/kernel.flat $(MODULES) $(EXTRA_DEPS)
 	@rm -rf $(ISO_ROOT) && mkdir -p $(ISO_ROOT)/boot/grub
-	cp $(BUILD)/kernel.elf $(ISO_ROOT)/boot/
+	cp $(BUILD)/kernel.flat $(ISO_ROOT)/boot/kernel
 ifdef MODULES
 	cp $(MODULES) $(ISO_ROOT)/boot/
 endif
 	printf 'set timeout=0\nset default=0\n' > $(ISO_ROOT)/boot/grub/grub.cfg
 	cat $(REPO)/mk/grub.head >> $(ISO_ROOT)/boot/grub/grub.cfg
-	if [ -f $(DAY_DIR)/grub.cfg ]; then cat $(DAY_DIR)/grub.cfg >> $(ISO_ROOT)/boot/grub/grub.cfg; else printf 'menuentry "linux011-course" {\n  multiboot /boot/kernel.elf\n  boot\n}\n' >> $(ISO_ROOT)/boot/grub/grub.cfg; fi
+	if [ -f $(DAY_DIR)/grub.cfg ]; then cat $(DAY_DIR)/grub.cfg >> $(ISO_ROOT)/boot/grub/grub.cfg; else printf 'menuentry "linux011-course" {\n  multiboot /boot/kernel\n  boot\n}\n' >> $(ISO_ROOT)/boot/grub/grub.cfg; fi
 ifdef MODULES
 	if [ -f $(DAY_DIR)/grub.cfg ]; then true; fi
 endif

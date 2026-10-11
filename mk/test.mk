@@ -4,6 +4,7 @@
 EXPECT  ?= $(DAY_DIR)/test/expect.txt
 TIMEOUT ?= 45
 SCREEN  ?= 1
+EXTRA   ?=
 KEYS    ?=
 
 .PHONY: test run report
@@ -11,7 +12,8 @@ test: $(BUILD)/artifact
 	@bash $(REPO)/tools/qemu-test.sh --image $(BUILD)/os.$(EXT) \
 	  $(if $(wildcard $(EXPECT)),--expect $(EXPECT),) \
 	  --timeout $(TIMEOUT) --screen $(SCREEN) --name $(DAY) \
-	  $(if $(KEYS),--send-keys "$(KEYS)",)
+	  $(if $(KEYS),--send-keys "$(KEYS)",) \
+	  $(if $(EXTRA),--extra-qemu-args "$(EXTRA)",)
 
 run: $(BUILD)/artifact
 	$(QEMU) $(QEMU_ARGS) $(if $(filter iso,$(IMG)),-cdrom $(BUILD)/os.iso -boot d,-fda $(BUILD)/os.img -boot a)

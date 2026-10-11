@@ -13,7 +13,8 @@
  * ===================================================================== */
 
 .set MB_MAGIC,     0x1BADB002
-.set MB_FLAGS,     0x3
+.set MB_FLAGS,     0x3 | 0x10000   /* bit16: AOUT_KLUDGE —— GRUB 据此用
+                                      平坦镜像方式加载, 并支持 module */
 .set MB_CHECKSUM,  -(MB_MAGIC + MB_FLAGS)
 
 .section .multiboot, "a"
@@ -21,6 +22,13 @@
 .long MB_MAGIC
 .long MB_FLAGS
 .long MB_CHECKSUM
+/* AOUT_KLUDGE 五元组: GRUB 按"文件偏移=header_addr-load_addr"平坦加载,
+   并把 [load_end, bss_end) 清零(页表/内核静态变量依赖这一点) */
+.long 0x200000                    /* header_addr = 镜像偏移0 的 VMA */
+.long 0x200000                    /* load_addr   = 链接基址 */
+.long _kernel_load_end            /* 载入数据结束 */
+.long _kernel_end                 /* bss 结束 */
+.long _start                      /* 入口 */
 
 .section .bss
 .align 16
