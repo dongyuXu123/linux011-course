@@ -12,6 +12,7 @@ SECTIONS
   .rodata BLOCK(4K) : ALIGN(4K)
   {
     *(.rodata .rodata.*)
+    *(.userblob)
   }
 
   .data BLOCK(4K) : ALIGN(4K)

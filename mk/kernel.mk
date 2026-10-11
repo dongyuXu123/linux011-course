@@ -25,6 +25,7 @@ CFLAGS  := -m32 -march=i486 -ffreestanding -fno-pic -fno-pie -fno-stack-protecto
            -fno-omit-frame-pointer -fno-tree-loop-distribute-patterns \
            -mno-mmx -mno-sse -mno-sse2 \
            -O1 -g -Wall -Wextra -Wno-unused-parameter -Wno-unused-function \
+           -MMD -MP \
            -I$(DAY_DIR)/include -I$(REPO)/mk/include
 ASFLAGS := -m32 -Wa,--32
 LDFLAGS := -m elf_i386 -no-pie --build-id=none
@@ -37,6 +38,8 @@ all: $(BUILD)/artifact
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+-include $(OBJS:.o=.d)
 
 %.o: %.S
 	$(CC) $(ASFLAGS) -c $< -o $@

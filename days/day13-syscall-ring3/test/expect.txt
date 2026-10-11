@@ -1,0 +1,7 @@
+[day13] kernel ready, launching user program via int 0x80 ABI
+[day13] user program copied to 0x40000, dropping to ring 3
+[day13] hello from ring 3! write syscall ok
+[day13] getpid says my pid is 1
+[day13] user task called exit(0)
+[day13] reaped user task pid=1 exit=0
+[day13] syscall ABI ok
