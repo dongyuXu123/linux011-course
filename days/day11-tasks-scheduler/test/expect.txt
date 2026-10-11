@@ -1,0 +1,7 @@
+[day11] sched demo: 3 kernel tasks, 10-tick slices
+[day11] switch 0 -> A
+[day11] task iter 0 running
+[day11] switch A -> B
+[day11] switch B -> C
+[day11] switch C -> 0
+[day11] all workers finished, schedule ok
