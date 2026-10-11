@@ -1,7 +1,7 @@
 [day18] initrd read from ATA disk (64KB)
-[day18] initrd: added init (705 bytes)
+[day18] initrd: added init (793 bytes)
 [day18] initrd: added hello (133 bytes)
 [day19] /sbin/init running in ring 3 (pid 1)
-init> [init] forked child pid 2
+forked child pid 2
 [day17] hello world, exec'd from ramfs!
 [init] child 2 exited with 0
