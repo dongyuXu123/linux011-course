@@ -117,6 +117,7 @@ int term_window_rect_for(int uid, int *x, int *y, int *w, int *h)
     return 1;
 }
 int win_count(void) { return nwins; }
+int win_uid_at(int i) { return (i >= 0 && i < nwins) ? wins[i].uid : -1; }
 
 static void draw_cursor(int cx, int cy)
 {

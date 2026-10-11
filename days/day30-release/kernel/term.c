@@ -59,6 +59,13 @@ void term_render(void)
     int x, y, w, h;
     if (!term_window_rect(&x, &y, &w, &h))
         return;
+    printk("[tr] rect=%d,%d win_id=%d\n", x, y, win_id);
+    {
+        extern int term_window_rect_for(int uid, int *x, int *y, int *w, int *h);
+        int mx, my, mw, mh;
+        printk("[tr] uids: %d %d %d %d\n",
+               win_uid_at(0), win_uid_at(1), win_uid_at(2), win_uid_at(3));
+    }
     int tx = x + 6, ty = y + 20;
     for (int r = 0; r < TERM_ROWS; r++)
         gfx_putstr(grid[r], tx, ty + r * 8, 0x00202020, 0x00E8E8E8);
@@ -108,6 +115,13 @@ void term_blink(void)
     int x, y, w, h;
     if (!term_window_rect(&x, &y, &w, &h))
         return;
+    printk("[tr] rect=%d,%d win_id=%d\n", x, y, win_id);
+    {
+        extern int term_window_rect_for(int uid, int *x, int *y, int *w, int *h);
+        int mx, my, mw, mh;
+        printk("[tr] uids: %d %d %d %d\n",
+               win_uid_at(0), win_uid_at(1), win_uid_at(2), win_uid_at(3));
+    }
     if (crow >= TERM_ROWS)
         return;
     gfx_putstr(want ? "_" : " ",
