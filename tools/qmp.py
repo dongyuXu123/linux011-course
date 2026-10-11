@@ -32,10 +32,7 @@ def main():
         print(json.dumps(resp["error"]), file=sys.stderr)
         sys.exit(2)
     print(json.dumps(resp.get("return", {})))
-    try:
-        f.write(json.dumps({"execute": "quit"}) + "\n"); f.flush()
-    except Exception:
-        pass
+    # 不自动 quit: 断开连接不影响 QEMU 运行; 需要 quit 由调用方显式发
 
 if __name__ == "__main__":
     main()
