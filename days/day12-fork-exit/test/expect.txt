@@ -1,0 +1,9 @@
+[day12] parent (pid 0) forking two children
+[day12] parent got children pid=1 and pid=2
+[day12] child A running, fork returned 0
+[day12] task pid 1 exit(7)
+[day12] child B running, fork returned 0
+[day12] task pid 2 exit(42)
+[day12] wait: pid=1 exit_code=7
+[day12] wait: pid=2 exit_code=42
+[day12] fork/exit/wait ok
