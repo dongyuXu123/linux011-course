@@ -1,0 +1,4 @@
+[day28] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day28] first refresh done
+builtins: help ps ver
+linux011-course 0.28 gui
