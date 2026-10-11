@@ -1,0 +1,6 @@
+[day15] ramfs mounted: 16 inodes
+[day15] linux011 mini shell
+name             size
+welcome.txt      39
+motd             22
+2 file(s), 14 free inode(s)
