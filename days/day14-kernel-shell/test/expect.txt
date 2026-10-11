@@ -1,0 +1,4 @@
+[day14] linux011 mini shell -- type 'help'
+pid  state  name
+uptime: 
+builtins: help ps uptime clear echo
