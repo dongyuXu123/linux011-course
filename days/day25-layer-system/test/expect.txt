@@ -1,0 +1,4 @@
+[day25] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day25] layer system online
+[day25] first refresh done
+[day25] cursor at (420,360) btn=0
