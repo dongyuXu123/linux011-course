@@ -1,0 +1,5 @@
+[day17] linux011 mini shell
+run: exec hello at 0x80000
+[day17] hello world, exec'd from ramfs!
+[day17] my pid is 1
+run: hello (pid 1) exited with 0
