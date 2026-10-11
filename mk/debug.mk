@@ -24,7 +24,7 @@ quietly:
 
 debug: quietly $(BUILD)/artifact $(EXTRA_DEPS)
 	@cp $(EXTRA_DEPS) /tmp/initrd-$(DAY).img 2>/dev/null || true
-	$(QEMU) $(QEMU_ARGS) $(if $(filter iso,$(IMG)),-cdrom $(BUILD)/os.iso -boot d,-fda $(BUILD)/os.img -boot a) \
+	setsid -f $(QEMU) $(QEMU_ARGS) $(if $(filter iso,$(IMG)),-cdrom $(BUILD)/os.iso -boot d,-fda $(BUILD)/os.img -boot a) \
 	  -s -serial file:$(BUILD)/debug-serial.log \
 	  $(if $(EXTRA),$(subst $(BUILD)/initrd.img,/tmp/initrd-$(DAY).img,$(EXTRA)),) \
 	  & echo "QEMU 调试实例已启动 (gdb stub :$(GDB_PORT))。连接: make -C $(CURDIR) gdb"
