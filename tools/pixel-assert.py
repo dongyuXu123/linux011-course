@@ -33,3 +33,7 @@ def main():
         print("PIXEL-FAIL: " + "; ".join(fails))
         sys.exit(1)
     print("PIXEL-OK")
+
+
+if __name__ == "__main__":
+    main()

@@ -36,3 +36,5 @@ TIMEOUT := 90
 PIXEL := 380,68=2060c0; 390,180=e8e8e8
 EXTRA := -drive file=$(BUILD)/initrd.img,format=raw,if=ide
 KEYS := r,u,n,spc,h,e,l,l,o,ret
+
+PIXEL := 100,340=e8e8e8

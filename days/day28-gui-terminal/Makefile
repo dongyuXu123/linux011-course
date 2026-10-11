@@ -34,5 +34,7 @@ TIMEOUT := 60
 KEYS := h,e,l,p,ret,v,e,r,ret
 MOUSE :=
 TIMEOUT := 90
-PIXEL := 60,468=181830; 30,75=202020
+PIXEL := 400,475=181830; 30,48=207030
 EXTRA := -drive file=$(BUILD)/initrd.img,format=raw,if=ide
+
+PIXEL := 400,475=181830; 30,48=207030

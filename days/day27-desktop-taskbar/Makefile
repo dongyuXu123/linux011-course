@@ -33,6 +33,8 @@ $(BUILD)/initrd.img: $(BUILD)/init.bin $(BUILD)/hello.bin
 TIMEOUT := 60
 MOUSE := 80,-172;0,0,down-left;60,80;0,0,up-left;0,0,click-left
 TIMEOUT := 90
-PIXEL := 60,468=181830; 380,68=2060c0
+PIXEL := 250,475=181830; 30,470=e0e0ff; 320,308=a04020
 EXTRA := -drive file=$(BUILD)/initrd.img,format=raw,if=ide
 KEYS := r,u,n,spc,h,e,l,l,o,ret
+
+PIXEL := 250,475=181830; 30,470=e0e0ff; 320,308=a04020
