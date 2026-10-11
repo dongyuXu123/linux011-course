@@ -35,7 +35,7 @@ KEYS := ret,h,e,l,p,ret,v,e,r,ret
 MOUSE :=
 TIMEOUT := 90
 PIXEL := 400,475=181830; 30,470=303058; 250,48=207030; 300,475=505088
-EXTRA := -drive file=$(BUILD)/initrd.img,format=raw,if=ide
+EXTRA := -drive file=$(BUILD)/initrd.img,format=raw,if=ide,
 
 PIXEL := 400,475=181830; 30,470=303058; 250,48=207030; 300,475=505088
 MOUSE := 0,0;0,0;0,0;0,0;80,-172;0,0,down-left;60,80;0,0,up-left;-120,2;-90,0,down-left;0,0,up-left

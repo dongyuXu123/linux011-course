@@ -96,14 +96,14 @@ static int t_win_id = -1;
 int term_win_id(void) { return t_win_id; }
 void term_set_win_id(int id) { t_win_id = id; }
 
-/* 按 id 取窗口矩形(term/apps 共用) */
+/* 按 uid 取窗口矩形(term/apps 共用) */
 int term_window_rect(int *x, int *y, int *w, int *h)
 {
-    int id = term_win_id();
-    if (id < 0)
+    int i = idx_of_uid(term_win_id());
+    if (i < 0)
         return 0;
-    *x = wins[id].x; *y = wins[id].y;
-    *w = wins[id].w; *h = wins[id].h;
+    *x = wins[i].x; *y = wins[i].y;
+    *w = wins[i].w; *h = wins[i].h;
     return 1;
 }
 
