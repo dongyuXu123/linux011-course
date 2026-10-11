@@ -28,7 +28,9 @@ static void scroll(void)
 void term_putc(char c)
 {
     if (c == '\n') { ccol = 0; crow++; }
-    else if (c == '\b') { if (ccol > 0) ccol--; }
+    else if (c == '\b') {
+        if (ccol > 0) { ccol--; grid[crow][ccol] = 0; }
+    }
     else {
         if (ccol >= TERM_COLS) { ccol = 0; crow++; }
         if (crow >= TERM_ROWS) { scroll(); crow = TERM_ROWS - 1; }
@@ -50,7 +52,7 @@ void term_puts(const char *s)
 /* 渲染进窗口内容区(由 gui_refresh 在窗口之后调用) */
 void term_render(void)
 {
-    if (win_id < 0 || !dirty)
+    if (win_id < 0)
         return;
     extern struct win_shim { int x, y, w, h; } *win_rect(int id);
     (void)win_rect;

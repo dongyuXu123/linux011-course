@@ -1,8 +1,7 @@
 [day30] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
 [day30] splash shown, entering desktop
 [day30] first refresh done
-[day30] focus -> window A
-[day30] window 'window A' grabbed
+[day30] focus -> memory monitor
 [day30] focus -> terminal
 builtins: help ps ver
 linux011-course 0.30 gui

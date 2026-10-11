@@ -85,5 +85,7 @@ else
 $(error IMG 必须是 iso 或 mbr)
 endif
 
+-include $(REPO)/mk/debug.mk
+
 clean:
 	rm -rf $(BUILD)

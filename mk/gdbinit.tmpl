@@ -1,0 +1,18 @@
+# 课程内核调试初始化 (由 mk/debug.mk 生成, 勿手改)
+set pagination off
+set confirm off
+set architecture i386
+symbol-file @KERNEL@
+target remote 127.0.0.1:@PORT@
+
+echo \n=== 已连接 @DAY@ 内核 (符号: @KERNEL@) ===\n
+echo 常用命令:\n
+echo   break schedule        断点: 调度器\n
+echo   break do_timer        断点: 时钟节拍\n
+echo   break tty_getc        断点: 键盘输入\n
+echo   print jiffies         查看心跳计数\n
+echo   info registers        CPU 寄存器\n
+echo   x/16i $pc             反汇编当前位置\n
+echo   continue / next / step / detach\n\n
+break kmain
+continue

@@ -250,8 +250,6 @@ void kmain(void)
         splash_show();
     }
     printk("[day30] layer system online\n");
-    win_create(380, 60, 220, 130, 0x002060C0, "window A");
-    win_create(80, 300, 260, 120, 0x00A04020, "window B");
     int tw = win_create(20, 40, 280, 140, 0x00207030, "terminal");
     term_attach(tw);
     gui_set_focus(tw);           /* 终端为初始活动窗口 */
