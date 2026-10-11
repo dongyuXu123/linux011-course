@@ -31,7 +31,9 @@ void fb_line(int x0, int y0, int x1, int y1, uint32_t rgb);
 void gfx_window(int x, int y, int w, int h, uint32_t title_rgb, const char *title);
 void mouse_init(void);
 void mouse_task_update(void);
-void gui_drag_step(int cx, int cy);
+int gui_pointer_step(int cx, int cy);
+int gui_focused(void);
+void gui_set_focus(int id);
 void term_attach(int id);
 void apps_init(void);
 void term_shell_poll(void);
@@ -252,6 +254,7 @@ void kmain(void)
     win_create(80, 300, 260, 120, 0x00A04020, "window B");
     int tw = win_create(20, 40, 280, 140, 0x00207030, "terminal");
     term_attach(tw);
+    gui_set_focus(tw);           /* 终端为初始活动窗口 */
     apps_init();
     tty_init();
     gui_refresh(cursor_x, cursor_y);
@@ -260,12 +263,13 @@ void kmain(void)
     mouse_init();
     printk("[day30] ps/2 mouse ready\n");
     for (;;) {
+        int changed = gui_pointer_step(cursor_x, cursor_y);
         int ox = cursor_x, oy = cursor_y;
         mouse_task_update();         /* 只更新光标坐标 */
-        term_shell_poll();
-        gui_drag_step(cursor_x, cursor_y);
-        if (cursor_x != ox || cursor_y != oy || term_dirty_flag())
+        term_shell_poll();           /* 活动窗口才收键盘 */
+        if (cursor_x != ox || cursor_y != oy || changed || term_dirty_flag())
             gui_refresh(cursor_x, cursor_y);   /* 有变化才整屏重绘 */
+        term_blink();                /* 光标闪烁: 只重画光标格 */
         __asm__ volatile("hlt");
     }
 

@@ -10,6 +10,7 @@
 #define MAXWINS 4
 
 struct win {
+    int uid;                      /* 稳定身份: z 序交换不影响外部引用 */
     int x, y, w, h;
     uint32_t title_rgb;
     const char *title;
@@ -18,6 +19,50 @@ struct win {
 
 static struct win wins[MAXWINS];
 static int nwins = 0;
+static int next_uid = 1;
+static int focused = -1;          /* 活动窗口的 uid(标题条/任务按钮高亮, 键盘去处) */
+
+int gui_focused(void) { return focused; }
+
+void gui_set_focus(int uid)
+{
+    focused = uid;
+}
+
+static int idx_of_uid(int uid)
+{
+    for (int i = 0; i < nwins; i++)
+        if (wins[i].uid == uid)
+            return i;
+    return -1;
+}
+
+/* 把窗口提到数组末尾(最高 z 序)并设为焦点; 返回是否真的改变了层序 */
+static int raise_to_top(int i)
+{
+    if (i < 0)
+        return 0;
+    int changed = (i != nwins - 1);
+    if (changed) {
+        struct win t = wins[i];
+        wins[i] = wins[nwins - 1];
+        wins[nwins - 1] = t;
+    }
+    focused = wins[nwins - 1].uid;   /* 焦点按 uid, 索引换位无影响 */
+    return changed;
+}
+
+static int topmost_win_at(int cx, int cy)
+{
+    for (int i = nwins - 1; i >= 0; i--) {
+        struct win *w = &wins[i];
+        if (w->visible &&
+            cx >= w->x && cx < w->x + w->w &&
+            cy >= w->y && cy < w->y + w->h)
+            return i;
+    }
+    return -1;
+}
 
 /* 光标精灵(与 day24 相同的 12x18 箭头) */
 static const char *arrow[18] = {
@@ -32,19 +77,20 @@ int win_create(int x, int y, int w, int h, uint32_t rgb, const char *title)
 {
     if (nwins >= MAXWINS)
         return -1;
-    wins[nwins] = (struct win){ x, y, w, h, rgb, title, 1 };
-    return nwins++;
+    wins[nwins] = (struct win){ .uid = next_uid, .x = x, .y = y,
+        .w = w, .h = h, .title_rgb = rgb, .title = title, .visible = 1 };
+    nwins++;                          /* ← uid 重写时弄丢过这一行 */
+    return next_uid++;
 }
 
-void win_move(int id, int x, int y)
+void win_move(int uid, int x, int y)
 {
-    if (id >= 0 && id < nwins) {
-        wins[id].x = x;
-        wins[id].y = y;
+    int i = idx_of_uid(uid);
+    if (i >= 0) {
+        wins[i].x = x;
+        wins[i].y = y;
     }
 }
-
-struct win *win_get(int id) { return &wins[id]; }
 
 static int t_win_id = -1;
 int term_win_id(void) { return t_win_id; }
@@ -61,12 +107,13 @@ int term_window_rect(int *x, int *y, int *w, int *h)
     return 1;
 }
 
-int term_window_rect_for(int id, int *x, int *y, int *w, int *h)
+int term_window_rect_for(int uid, int *x, int *y, int *w, int *h)
 {
-    if (id < 0 || id >= nwins)
+    int i = idx_of_uid(uid);
+    if (i < 0)
         return 0;
-    *x = wins[id].x; *y = wins[id].y;
-    *w = wins[id].w; *h = wins[id].h;
+    *x = wins[i].x; *y = wins[i].y;
+    *w = wins[i].w; *h = wins[i].h;
     return 1;
 }
 int win_count(void) { return nwins; }
@@ -80,39 +127,38 @@ static void draw_cursor(int cx, int cy)
         }
 }
 
-/* ---- day26: 拖动 ----
- * 按下时光标命中的窗口标题条被"抓住", 移动中窗口跟随光标;
- * 抓住的窗口提到最顶(简单实现: 移到数组末尾 = 最高 z 序) */
+/* ---- day26/day30: 点击选中 + 标题条拖动 ----
+ * 按下沿: 命中的窗口(任意位置)置顶并成为活动窗口;
+ *         若按在标题条上则同时"抓住"进入拖动。 */
 static int drag_id = -1, drag_offx, drag_offy;
 extern int mouse_buttons;
 
-void gui_drag_step(int cx, int cy)
+extern int mouse_take_press_edge(void);
+
+int gui_pointer_step(int cx, int cy)
 {
-    if (mouse_buttons & 1) {                       /* 左键按住 */
-        if (drag_id < 0) {
-            for (int i = nwins - 1; i >= 0; i--) { /* 顶窗优先 */
-                struct win *w = &wins[i];
-                if (w->visible &&
-                    cx >= w->x && cx < w->x + w->w &&
-                    cy >= w->y && cy < w->y + 16) {
-                    drag_id = i;
-                    drag_offx = cx - w->x;
-                    drag_offy = cy - w->y;
-                    /* 提到最顶: 与数组末尾交换 */
-                    struct win t = wins[i];
-                    wins[i] = wins[nwins - 1];
-                    wins[nwins - 1] = t;
-                    drag_id = nwins - 1;
-                    printk("[day30] window '%s' grabbed\n", wins[drag_id].title);
-                    break;
-                }
+    int press = mouse_take_press_edge();           /* 包级按下沿, 不丢 */
+    int btn = mouse_buttons & 1;
+    int changed = 0;
+    if (press) {                                   /* 按下沿 */
+        int hit = topmost_win_at(cx, cy);
+        printk("[hit] hit=%d nwins=%d\n", hit, nwins);
+        if (hit >= 0) {
+            changed = raise_to_top(hit);
+            printk("[day30] focus -> %s\n", wins[nwins - 1].title);
+            if (cy - wins[nwins - 1].y < 16) {     /* 按在标题条上: 抓住 */
+                drag_id = wins[nwins - 1].uid;
+                drag_offx = cx - wins[nwins - 1].x;
+                drag_offy = cy - wins[nwins - 1].y;
+                printk("[day30] window '%s' grabbed\n", wins[nwins - 1].title);
             }
-        } else {
-            win_move(drag_id, cx - drag_offx, cy - drag_offy);
         }
-    } else {
-        drag_id = -1;
+    } else if (btn && drag_id >= 0) {              /* 拖动中 */
+        win_move(drag_id, cx - drag_offx, cy - drag_offy);
     }
+    if (!btn)
+        drag_id = -1;
+    return changed;
 }
 
 /* 任务栏: 底部 24px, 左侧任务按钮, 右侧时钟(jiffies→mm:ss) */
@@ -129,8 +175,9 @@ static void draw_taskbar(void)
         int bw = 0;
         while (t[bw]) bw++;
         bw = bw * 8 + 12;
-        fb_rect(bx, h - th + 3, bw, 18, 0x00303058);
-        gfx_putstr(t, bx + 6, h - th + 8, 0x00E0E0FF, 0x00303058);
+        uint32_t bg = (wins[i].uid == focused) ? 0x00505088 : 0x00303058;
+        fb_rect(bx, h - th + 3, bw, 18, bg);
+        gfx_putstr(t, bx + 6, h - th + 8, 0x00E0E0FF, bg);
         bx += bw + 4;
     }
     /* 右侧时钟 */
@@ -142,9 +189,13 @@ static void draw_taskbar(void)
     gfx_putstr(buf, w - 8 * 5 - 8, h - th + 8, 0x00FFFFFF, 0x00181830);
 }
 
-/* z 序自底向上整屏重绘 */
+/* z 序自底向上整屏重绘: 先画进内存缓冲, 再一次上屏(双缓冲) */
+static uint32_t shadow[640 * 480];
+
 void gui_refresh(int cursor_x, int cursor_y)
 {
+    fb_set_target(shadow);
+
     /* 背景: 渐变 + 底纹格子 */
     for (int y = 0; y < (int)fb_height(); y++)
         for (int x = 0; x < (int)fb_width(); x++) {
@@ -153,10 +204,16 @@ void gui_refresh(int cursor_x, int cursor_y)
                 c = ((x / 3) >> 1 << 16) | ((y / 3) >> 1 << 8) | 0x302838;
             fb_pixel(x, y, c);
         }
-    for (int i = 0; i < nwins; i++)
-        if (wins[i].visible)
-            gfx_window(wins[i].x, wins[i].y, wins[i].w, wins[i].h,
-                       wins[i].title_rgb, wins[i].title);
+    for (int i = 0; i < nwins; i++) {
+        if (!wins[i].visible)
+            continue;
+        /* 活动窗口标题用原色, 非活动变暗 */
+        uint32_t t = (wins[i].uid == focused)
+            ? wins[i].title_rgb
+            : ((wins[i].title_rgb >> 1) & 0x7F7F7F);
+        gfx_window(wins[i].x, wins[i].y, wins[i].w, wins[i].h,
+                   t, wins[i].title);
+    }
     {
         void term_render(void);
         term_render();
@@ -167,4 +224,7 @@ void gui_refresh(int cursor_x, int cursor_y)
     }
     draw_taskbar();
     draw_cursor(cursor_x, cursor_y);
+
+    fb_set_target(0);
+    fb_flush(shadow);
 }

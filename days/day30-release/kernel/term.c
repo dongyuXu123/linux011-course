@@ -13,6 +13,7 @@ static char grid[TERM_ROWS][TERM_COLS + 1];
 static int crow = 0, ccol = 0;
 static int win_id = -1;
 static int dirty = 1;
+static int blink_state = 1;
 
 extern void term_set_win_id(int id);
 void term_attach(int id) { win_id = id; term_set_win_id(id); }
@@ -64,6 +65,7 @@ void term_render(void)
     /* 光标块 */
     if (crow < TERM_ROWS && ccol < TERM_COLS)
         gfx_putstr("_", tx + ccol * 8, ty + crow * 8, 0x00C02020, 0x00E8E8E8);
+    blink_state = 1;
     dirty = 0;
 }
 
@@ -75,6 +77,7 @@ extern void shell_cmd_ps_grid(void);
 
 static void do_cmd(const char *cmd)
 {
+    printk("[cmd] '%s' len=%d\n", cmd, strlen(cmd));
     if (!strcmp(cmd, "help")) {
         term_puts("builtins: help ps ver\n");
     } else if (!strcmp(cmd, "ver")) {
@@ -90,8 +93,31 @@ static void do_cmd(const char *cmd)
 
 int term_dirty_flag(void) { return dirty; }
 
+int gui_focused(void);
+
+/* 光标闪烁: 活动窗口才闪; 25 tick(~250ms)切换一次明暗 */
+void term_blink(void)
+{
+    if (win_id < 0)
+        return;
+    extern volatile uint32_t jiffies;
+    int want = (gui_focused() == win_id) && (((jiffies / 25) & 1) == 0);
+    if (want == blink_state)
+        return;
+    blink_state = want;
+    int x, y, w, h;
+    if (!term_window_rect(&x, &y, &w, &h))
+        return;
+    if (crow >= TERM_ROWS)
+        return;
+    gfx_putstr(want ? "_" : " ",
+               x + 6 + ccol * 8, y + 20 + crow * 8, 0x00C02020, 0x00E8E8E8);
+}
+
 void term_shell_poll(void)
 {
+    if (win_id < 0 || gui_focused() != win_id)
+        return;                    /* 只有活动窗口收键盘 */
     char c = tty_getc_nonblock();
     if (c == -1)
         return;

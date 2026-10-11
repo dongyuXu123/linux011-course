@@ -98,11 +98,35 @@ int fb_is_active(void) { return fb_active; }
 uint32_t fb_width(void)  { return fb_w; }
 uint32_t fb_height(void) { return fb_h; }
 
+/* 渲染目标: 0=LFB 直写; 指向内存缓冲时, gui_refresh 先画到缓冲,
+   再用 fb_flush 一次性上屏 —— 消除逐像素直写的撕裂/闪烁 */
+static volatile uint32_t *render_target = 0;
+
+void fb_set_target(uint32_t *buf)
+{
+    render_target = buf;
+}
+
 void fb_pixel(int x, int y, uint32_t rgb)
 {
     if (!fb_active || x < 0 || y < 0 || x >= (int)fb_w || y >= (int)fb_h)
         return;
-    lfb[y * (fb_pitch / 4) + x] = rgb;
+    volatile uint32_t *dst = render_target ? render_target : lfb;
+    dst[y * (fb_pitch / 4) + x] = rgb;
+}
+
+/* 把一帧缓冲按行拷到 LFB(双缓冲上屏) */
+void fb_flush(const uint32_t *src)
+{
+    if (!fb_active)
+        return;
+    int stride = fb_pitch / 4;
+    for (uint32_t y = 0; y < fb_h; y++) {
+        volatile uint32_t *d = lfb + y * stride;
+        const uint32_t *s = src + y * fb_w;
+        for (uint32_t x = 0; x < fb_w; x++)
+            d[x] = s[x];
+    }
 }
 
 void fb_fill(uint32_t rgb)

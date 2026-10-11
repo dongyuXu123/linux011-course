@@ -77,6 +77,8 @@ uint32_t fb_width(void);
 uint32_t fb_height(void);
 void fb_pixel(int x, int y, uint32_t rgb);
 void fb_fill(uint32_t rgb);
+void fb_set_target(uint32_t *buf);
+void fb_flush(const uint32_t *src);
 void con_serial_only_set(void);
 
 /* ---- gfx.c ---- */
@@ -92,12 +94,16 @@ void gfx_window(int x, int y, int w, int h, uint32_t title_rgb, const char *titl
 int  win_create(int x, int y, int w, int h, uint32_t rgb, const char *title);
 void win_move(int id, int x, int y);
 void gui_refresh(int cursor_x, int cursor_y);
-void gui_drag_step(int cx, int cy);
+int  gui_pointer_step(int cx, int cy);   /* 返回1: 焦点/层序变化 */
+int  gui_focused(void);
+void gui_set_focus(int id);
 
 /* ---- term.c ---- */
 void term_attach(int id);
 void term_render(void);
+int  term_window_rect(int *x, int *y, int *w, int *h);
 void term_shell_poll(void);
+void term_blink(void);
 void term_boot_banner(void);
 int term_dirty_flag(void);
 char tty_getc_nonblock(void);
@@ -138,6 +144,8 @@ uint32_t fb_width(void);
 uint32_t fb_height(void);
 void fb_pixel(int x, int y, uint32_t rgb);
 void fb_fill(uint32_t rgb);
+void fb_set_target(uint32_t *buf);
+void fb_flush(const uint32_t *src);
 void con_serial_only_set(void);
 
 /* ---- gfx.c ---- */
@@ -153,12 +161,16 @@ void gfx_window(int x, int y, int w, int h, uint32_t title_rgb, const char *titl
 int  win_create(int x, int y, int w, int h, uint32_t rgb, const char *title);
 void win_move(int id, int x, int y);
 void gui_refresh(int cursor_x, int cursor_y);
-void gui_drag_step(int cx, int cy);
+int  gui_pointer_step(int cx, int cy);   /* 返回1: 焦点/层序变化 */
+int  gui_focused(void);
+void gui_set_focus(int id);
 
 /* ---- term.c ---- */
 void term_attach(int id);
 void term_render(void);
+int  term_window_rect(int *x, int *y, int *w, int *h);
 void term_shell_poll(void);
+void term_blink(void);
 void term_boot_banner(void);
 int term_dirty_flag(void);
 char tty_getc_nonblock(void);

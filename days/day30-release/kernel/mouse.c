@@ -28,9 +28,19 @@ static uint8_t pkt[3];
 static int mouse_cycle = 0;
 static int mouse_dx_acc, mouse_dy_acc, mouse_btn;
 static int packets = 0;
+static int prev_btn0 = 0;
+static int btn_press_edge = 0;     /* 左键按下沿(包级别记录, 不会因同帧抬起丢失) */
 
 int cursor_x = 320, cursor_y = 240;
+int mouse_take_press_edge(void)
+{
+    int e = btn_press_edge;
+    btn_press_edge = 0;
+    return e;
+}
 int mouse_buttons = 0;
+
+static void mouse_feed(uint8_t d);
 
 void mouse_init(void)
 {
@@ -47,15 +57,21 @@ void mouse_init(void)
     mouse_cycle = 0;
 }
 
-/* 主循环反复调用: 从 8042 收字节, 组满 3 字节包则累积位移 */
+/* 主循环反复调用: 把 8042 输出缓冲**排空**(每 tick 一次),
+   否则注入的连续位移包会因缓冲溢出丢包 */
 void mouse_task_update(void)
 {
     uint8_t st = inb_(0x64);
-    if (!(st & 1))
-        return;                        /* 无数据 */
-    uint8_t d = inb_(0x60);
-    if (!(st & 0x20))
-        return;                        /* 键盘数据, 不归我们 */
+    while (st & 1) {
+        uint8_t d = inb_(0x60);
+        if (st & 0x20)
+            mouse_feed(d);             /* 鼠标字节: 进包解析 */
+        st = inb_(0x64);
+    }
+}
+
+static void mouse_feed(uint8_t d)
+{
     pkt[mouse_cycle++] = d;
     if (mouse_cycle < 3)
         return;
@@ -68,6 +84,9 @@ void mouse_task_update(void)
     mouse_dx_acc += dx;
     mouse_dy_acc -= dy;                /* 屏幕 y 向下 */
     mouse_btn = pkt[0] & 3;
+    if ((mouse_btn & 1) && !prev_btn0)
+        btn_press_edge = 1;            /* 左键按下沿(包级, 不因同帧抬起丢失) */
+    prev_btn0 = mouse_btn & 1;
     mouse_buttons = mouse_btn;
     packets++;
     if (dx || dy || mouse_btn) {
@@ -78,9 +97,7 @@ void mouse_task_update(void)
         if (cursor_y < 0) cursor_y = 0;
         if (cursor_x > 627) cursor_x = 627;
         if (cursor_y > 461) cursor_y = 461;
-        static int printed = 0;
-        if (printed++ < 5)
-            printk("[day30] cursor at (%d,%d) btn=%d\n",
-                   cursor_x, cursor_y, mouse_btn);
+        printk("[day30] cursor at (%d,%d) btn=%d\n",
+               cursor_x, cursor_y, mouse_btn);
     }
 }
