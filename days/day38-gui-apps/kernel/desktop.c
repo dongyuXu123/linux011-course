@@ -13,12 +13,21 @@ struct win {
     int uid;                      /* 稳定身份: z 序交换不影响外部引用 */
     int x, y, w, h;
     uint32_t title_rgb;
-    const char *title;
+    char     tbuf[16];            /* 标题自持拷贝(防调用方缓冲被改写) */
+    const char *title;            /* 恒指向本结构内 tbuf */
     int visible;
 };
 
 static struct win wins[MAXWINS];
 static int nwins = 0;
+
+/* day39 回修: wins[] 任意结构体拷贝后, title 恒指回自身 tbuf
+   (指针会被拷贝带走, 指向旧槽位 —— 曾致窗口标题显示成别的内容) */
+static void wins_repair_titles(void)
+{
+    for (int i = 0; i < nwins; i++)
+        wins[i].title = wins[i].tbuf;
+}
 static int next_uid = 1;
 static int focused = -1;          /* 活动窗口的 uid(标题条/任务按钮高亮, 键盘去处) */
 
@@ -47,6 +56,7 @@ static int raise_to_top(int i)
         struct win t = wins[i];
         wins[i] = wins[nwins - 1];
         wins[nwins - 1] = t;
+        wins_repair_titles();
     }
     focused = wins[nwins - 1].uid;   /* 焦点按 uid, 索引换位无影响 */
     return changed;
@@ -78,7 +88,14 @@ int win_create(int x, int y, int w, int h, uint32_t rgb, const char *title)
     if (nwins >= MAXWINS)
         return -1;
     wins[nwins] = (struct win){ .uid = next_uid, .x = x, .y = y,
-        .w = w, .h = h, .title_rgb = rgb, .title = title, .visible = 1 };
+        .w = w, .h = h, .title_rgb = rgb, .visible = 1 };
+    {
+        int k = 0;
+        for (; k < 15 && title[k]; k++)
+            wins[nwins].tbuf[k] = title[k];
+        wins[nwins].tbuf[k] = 0;
+        wins[nwins].title = wins[nwins].tbuf;
+    }
     nwins++;                          /* ← uid 重写时弄丢过这一行 */
     return next_uid++;
 }
