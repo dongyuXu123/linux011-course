@@ -10,6 +10,8 @@
 #define MAXWINS 4
 
 struct win {
+    int uid;                      /* 稳定身份: z 序换位后下标失效(day30 教训,
+                                     溯源回修 day26 引入换位之日起即需要) */
     int x, y, w, h;
     uint32_t title_rgb;
     const char *title;
@@ -18,6 +20,15 @@ struct win {
 
 static struct win wins[MAXWINS];
 static int nwins = 0;
+static int next_uid = 1;
+
+static int idx_of_uid(int uid)
+{
+    for (int i = 0; i < nwins; i++)
+        if (wins[i].uid == uid)
+            return i;
+    return -1;
+}
 
 /* 光标精灵(与 day24 相同的 12x18 箭头) */
 static const char *arrow[18] = {
@@ -32,19 +43,25 @@ int win_create(int x, int y, int w, int h, uint32_t rgb, const char *title)
 {
     if (nwins >= MAXWINS)
         return -1;
-    wins[nwins] = (struct win){ x, y, w, h, rgb, title, 1 };
-    return nwins++;
+    wins[nwins] = (struct win){ next_uid, x, y, w, h, rgb, title, 1 };
+    nwins++;                          /* ← uid 回修时弄丢过这一行(历史重演) */
+    return next_uid++;
 }
 
-void win_move(int id, int x, int y)
+void win_move(int uid, int x, int y)
 {
-    if (id >= 0 && id < nwins) {
-        wins[id].x = x;
-        wins[id].y = y;
+    int i = idx_of_uid(uid);
+    if (i >= 0) {
+        wins[i].x = x;
+        wins[i].y = y;
     }
 }
 
-struct win *win_get(int id) { return &wins[id]; }
+struct win *win_get(int uid)
+{
+    int i = idx_of_uid(uid);
+    return i >= 0 ? &wins[i] : &wins[0];
+}
 int win_count(void) { return nwins; }
 
 static void draw_cursor(int cx, int cy)
@@ -66,6 +83,15 @@ void gui_drag_step(int cx, int cy)
 {
     if (mouse_buttons & 1) {                       /* 左键按住 */
         if (drag_id < 0) {
+            static int bs;
+            if (bs++ < 3)
+                printk("[bp] cx=%d cy=%d nwins=%d A=%d,%d,%d,%d B=%d,%d,%d,%d\n",
+                       cx, cy, nwins,
+                       wins[0].uid, wins[0].x, wins[0].y, wins[0].w,
+                       nwins > 1 ? wins[1].uid : -1,
+                       nwins > 1 ? wins[1].x : -1,
+                       nwins > 1 ? wins[1].y : -1,
+                       nwins > 1 ? wins[1].w : -1);
             for (int i = nwins - 1; i >= 0; i--) { /* 顶窗优先 */
                 struct win *w = &wins[i];
                 if (w->visible &&
@@ -78,8 +104,8 @@ void gui_drag_step(int cx, int cy)
                     struct win t = wins[i];
                     wins[i] = wins[nwins - 1];
                     wins[nwins - 1] = t;
-                    drag_id = nwins - 1;
-                    printk("[day26] window '%s' grabbed\n", wins[drag_id].title);
+                    drag_id = wins[nwins - 1].uid;
+                    printk("[day26] window '%s' grabbed\n", wins[idx_of_uid(drag_id)].title);
                     break;
                 }
             }

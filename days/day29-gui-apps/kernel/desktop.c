@@ -10,6 +10,8 @@
 #define MAXWINS 4
 
 struct win {
+    int uid;                      /* 稳定身份: z 序换位后下标失效(day30 教训,
+                                     溯源回修 day26 引入换位之日起即需要) */
     int x, y, w, h;
     uint32_t title_rgb;
     const char *title;
@@ -18,6 +20,15 @@ struct win {
 
 static struct win wins[MAXWINS];
 static int nwins = 0;
+static int next_uid = 1;
+
+static int idx_of_uid(int uid)
+{
+    for (int i = 0; i < nwins; i++)
+        if (wins[i].uid == uid)
+            return i;
+    return -1;
+}
 
 /* 光标精灵(与 day24 相同的 12x18 箭头) */
 static const char *arrow[18] = {
@@ -32,19 +43,25 @@ int win_create(int x, int y, int w, int h, uint32_t rgb, const char *title)
 {
     if (nwins >= MAXWINS)
         return -1;
-    wins[nwins] = (struct win){ x, y, w, h, rgb, title, 1 };
-    return nwins++;
+    wins[nwins] = (struct win){ next_uid, x, y, w, h, rgb, title, 1 };
+    nwins++;                          /* ← uid 回修时弄丢过这一行(历史重演) */
+    return next_uid++;
 }
 
-void win_move(int id, int x, int y)
+void win_move(int uid, int x, int y)
 {
-    if (id >= 0 && id < nwins) {
-        wins[id].x = x;
-        wins[id].y = y;
+    int i = idx_of_uid(uid);
+    if (i >= 0) {
+        wins[i].x = x;
+        wins[i].y = y;
     }
 }
 
-struct win *win_get(int id) { return &wins[id]; }
+struct win *win_get(int uid)
+{
+    int i = idx_of_uid(uid);
+    return i >= 0 ? &wins[i] : &wins[0];
+}
 
 static int t_win_id = -1;
 int term_win_id(void) { return t_win_id; }
@@ -53,11 +70,11 @@ void term_set_win_id(int id) { t_win_id = id; }
 /* 按 id 取窗口矩形(term/apps 共用) */
 int term_window_rect(int *x, int *y, int *w, int *h)
 {
-    int id = term_win_id();
-    if (id < 0)
+    int i = idx_of_uid(term_win_id());
+    if (i < 0)
         return 0;
-    *x = wins[id].x; *y = wins[id].y;
-    *w = wins[id].w; *h = wins[id].h;
+    *x = wins[i].x; *y = wins[i].y;
+    *w = wins[i].w; *h = wins[i].h;
     return 1;
 }
 
@@ -102,7 +119,7 @@ void gui_drag_step(int cx, int cy)
                     struct win t = wins[i];
                     wins[i] = wins[nwins - 1];
                     wins[nwins - 1] = t;
-                    drag_id = nwins - 1;
+                    drag_id = wins[nwins - 1].uid;
                     printk("[day29] window '%s' grabbed\n", wins[drag_id].title);
                     break;
                 }

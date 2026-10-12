@@ -241,6 +241,10 @@ void kmain(void)
         if (size < 0 || size > 32768)
             panic("init image missing");
         ramfs_read("init", stage, size);
+        /* 溯源回修(day31 起的竞态): 任务创建即 RUNNABLE, 若时钟在此处
+           与页映射完成之间抢占, init 会在映射缺失下进 ring3 → 缺页。
+           cli 包住"建任务+映射"全程(0.11 在 fork 出进程前同样备齐页表) */
+        __asm__ volatile("cli");
         kernel_task_create(1, launch_init, 'I');
         struct task_struct *t1 = &task[1];
         for (uint32_t off = 0; off < (uint32_t)size + 4095; off += 4096) {
@@ -252,6 +256,7 @@ void kmain(void)
                    (size - off > 4096) ? 4096 : (size - off));
             mm_map_page(t1->cr3, TASK_LIN_BASE(1) + off, phys);
         }
+        __asm__ volatile("sti");
         /* 用户栈: 0xF0000 往下 64KB(0xE0000~0x100000) */
         for (uint32_t off = 0xE0000; off < 0x100000; off += 4096) {
             uint32_t phys = get_free_page();

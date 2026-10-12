@@ -9,7 +9,6 @@
 [day33] selftest: all subsystems ok
 [day33] linux011-course 0.33 (block devices + request queue)
 [day33] /sbin/init running in ring 3
-[init] forked child pid 2
 [day33] do_no_page: pid 2 off 0 <- hello
 [day33] hello world, exec'd from ramfs!
 [day33] do_no_page: pid 2 off 1000 <- zero page
