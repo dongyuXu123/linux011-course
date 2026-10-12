@@ -1,9 +1,18 @@
 /* =====================================================================
- * day13 - kernel/syscall.c：系统调用分发(0.11 sys_call_table 思想)
- * 调用号沿用 0.11 include/unistd.h: exit=1 write=4 getpid=20
+ * day31 - kernel/syscall.c：系统调用(0.11 ABI 子集)
+ * 调用号沿用 0.11: exit=1 fork=2 read=3 write=4 execve=11 getpid=20
+ * 用户指针均为任务空间内偏移, 经 UPTR 翻译为内核线性地址
+ * (0.11 get_fs_byte/set_fs_byte 的对应物); 访问用户数据前后
+ * cli/sti, 防止时钟抢占切换 CR3 后摸错地址空间。
  * ===================================================================== */
 #include <kernel.h>
 #include <string.h>
+
+int ramfs_read(const char *name, char *buf, uint32_t len);
+int  ramfs_size(const char *name);
+
+/* 阻塞取键(day08 键盘环形队列) */
+char tty_q_get(void);
 
 #define __NR_exit     1
 #define __NR_fork     2
@@ -13,25 +22,9 @@
 #define __NR_getpid   20
 #define __NR_wait4    72
 
-int ramfs_read(const char *name, char *buf, uint32_t len);
-int  ramfs_size(const char *name);
-
-/* tty 读队列(day08 keyboard.c) */
-char tty_q_get(void);
-int  tty_q_count(void);
-
-static int sys_read(int fd, char *buf, int len);
-static int sys_fork(struct pt_regs *regs);
-extern char task_entry_stub[];
-static int sys_execve(const char *name, struct pt_regs *regs);
-static int sys_wait4(int pid, int *status);
-
-/* 0.11 纪律: 进内核先把用户数据拷进内核缓冲 —— 时钟可能随时抢占
-   并切换 CR3, 抢占后再摸用户指针读到的是别的任务的空间 */
 static char kbuf[512];
 
-/* 用户指针 = 任务空间内偏移; 内核侧线性 = 任务基址 + 偏移
-   (0.11 的 get_fs_byte/set_fs_byte 干的就是这件事) */
+/* 用户指针 → 内核线性地址 */
 #define UPTR(p) ((void *)(TASK_LIN_BASE((int)(current - task)) + \
                  (uint32_t)(uintptr_t)(p)))
 
@@ -43,7 +36,6 @@ static int sys_write(int fd, const char *buf, int len)
     for (int i = 0; i < len; i++)
         kbuf[i] = ((char *)UPTR(buf))[i];
     __asm__ volatile("sti");
-    printk("[w] cur=%c fd=%d len=%d\n", current->name, fd, len);
     for (int i = 0; i < len; i++)
         con_putc(kbuf[i]);
     return len;
@@ -53,56 +45,6 @@ static int sys_getpid(void)
 {
     return current->pid;
 }
-
-static int sys_exit(int code)
-{
-    printk("[day13] user task called exit(%d)\n", code);
-    current->exit_code = code;
-    current->state = TASK_ZOMBIE;
-    schedule();                /* 不再回来, iret 永远不会发生 */
-    return 0;
-}
-
-int syscall_dispatch(struct pt_regs *regs)
-{
-    switch (regs->eax) {
-    case __NR_write:   return sys_write(regs->ebx, (const char *)regs->ecx, regs->edx);
-    case __NR_getpid:  return sys_getpid();
-    case __NR_exit:    return sys_exit(regs->ebx);
-    case __NR_read:    return sys_read(regs->ebx, (char *)regs->ecx, regs->edx);
-    case __NR_fork:    return sys_fork(regs);
-    case __NR_wait4:   return sys_wait4(regs->ebx, (int *)regs->ecx);
-    case __NR_execve:  return sys_execve((const char *)regs->ebx, regs);
-    default:
-        printk("[day19] unknown syscall %d\n",
-               regs->eax, regs->ebx, regs->ecx, regs->vector, regs->eip, regs->cs);
-        return -1;
-    }
-}
-
-/* 系统 TSS: GDT 0x28 槽描述符由这里回填(head.S 里只是占位) */
-static void tss_install(void)
-{
-    extern char gdt[], system_tss[];
-    uint32_t base = (uint32_t)(uintptr_t)system_tss;
-    uint32_t lim  = 103;                     /* 32位 TSS 最小 104 字节 */
-    uint8_t *d = (uint8_t *)gdt + 5 * 8;
-    d[0] = lim & 0xFF;        d[1] = (lim >> 8) & 0xFF;
-    d[2] = base & 0xFF;       d[3] = (base >> 8) & 0xFF;
-    d[4] = (base >> 16) & 0xFF;
-    d[5] = 0x89;              /* present, DPL0, 32-bit available TSS */
-    d[6] = (lim >> 16) & 0x0F;
-    d[7] = (base >> 24) & 0xFF;
-
-    uint32_t *t = (uint32_t *)system_tss;
-    t[0] = 0;                 /* back link */
-    t[1] = 0;                 /* esp0: 每次任务切换时更新(sched.c) */
-    t[2] = 0x10;              /* ss0 */
-    __asm__ volatile("ltr %%ax" : : "a"((uint16_t)0x28));
-}
-
-/* ---- day19: 阻塞行读(来自 day08 键盘环形队列) ---- */
-char tty_q_get(void);
 
 static int sys_read(int fd, char *buf, int len)
 {
@@ -122,7 +64,7 @@ static int sys_read(int fd, char *buf, int len)
     return n;
 }
 
-/* ---- day19/31: ring3 fork —— 复制内核栈现场 + 0.11 copy_mem ---- */
+/* ---- fork: 复制内核栈现场 + 0.11 copy_mem(用户页逐页复制) ---- */
 extern char fork_child_resume2[];
 int do_fork(uint32_t caller_esp, const uint32_t *frame, int ndwords);
 
@@ -137,21 +79,20 @@ static int sys_fork(struct pt_regs *regs)
     int pid = do_fork(esp_now, frame, 2);
     if (pid < 0)
         return -1;
-    printk("[fk] parent user eip=%x esp=%x\n", regs->eip, regs->oesp);
-
-    /* 0.11 copy_mem: 子任务独立页目录 + LDT(子基址), 用户页逐页复制 */
-    int n = pid - 1;                        /* 槽位号(课程里 pid=slot+1) */
-    (void)n;
     struct task_struct *child = 0;
     for (int i = 0; i < NR_TASKS; i++)
         if (task[i].pid == pid) { child = &task[i]; break; }
     if (!child)
         return -1;
-    task_setup_mm((int)(child - task));     /* 新 cr3/LDT(子 64MB 基址) */
-    printk("[fk2] slot=%d state=%d cr3=%x\n", (int)(child - task), child->state, child->cr3);
 
-    /* 父用户区(pde_base 起 16 项)逐页复制到子任务同偏移 */
-
+    /* 0.11 copy_mem: 子任务独立页目录 + LDT(子 64MB 基址),
+       父用户区逐页物理复制到子空间同偏移 */
+    int cslot = (int)(child - task);
+    uint32_t saved_child_kesp = child->kesp;
+    uint32_t saved_child_state = child->state;
+    task_setup_mm(cslot);
+    child->kesp = saved_child_kesp;
+    child->state = saved_child_state;
     for (uint32_t off = 0; off < 0x100000; off += 4096) {
         uint32_t pde = current->mm_pde_base + (off >> 22);
         uint32_t *pd = (uint32_t *)current->cr3;
@@ -165,57 +106,56 @@ static int sys_fork(struct pt_regs *regs)
         uint32_t nphys = get_free_page();
         if (!nphys)
             break;
-        memcpy((void *)nphys, (void *)phys, 4096);      /* 0.11: 物理复制 */
-        mm_map_page(child->cr3, TASK_LIN_BASE((int)(child - task)) + off, nphys);
+        memcpy((void *)nphys, (void *)phys, 4096);
+        mm_map_page(child->cr3, TASK_LIN_BASE(cslot) + off, nphys);
     }
     return pid;
 }
 
-/* ---- day31: execve —— 0.11 地址模型: 程序装入本任务线性空间偏移 0,
-   LDT 段基址(任务 64MB)由硬件加成; 栈顶在空间内 0xF0000 ---- */
-
-
-int ramfs_size(const char *name);
-int ramfs_read(const char *name, char *buf, uint32_t len);
-
-/* day31: 0.11 地址模型 —— 程序装入本任务线性空间偏移 0(物理页从池取,
-   挂进本任务页目录), LDT 段基址=任务 64MB 由硬件加成; iret 直达 */
+/* ---- execve: 整个替换任务映像(0.11 sys_execve + start_thread) ----
+   程序装入本任务空间偏移 0; 然后改写系统调用现场(iret 帧), 本系统
+   调用"返回"时 CPU 直接落入新程序入口 —— 0.11 start_thread 同法 */
 static int sys_execve(const char *name, struct pt_regs *regs)
 {
-    const char *kname = (const char *)UPTR(name);
-    int size = ramfs_size(kname);
+    int slot = (int)(current - task);
+    __asm__ volatile("cli");               /* 拷贝路径名: 不容抢占切 CR3 */
+    {
+        const char *u = (const char *)UPTR(name);
+        int i = 0;
+        while (i < 511 && u[i]) { kbuf[i] = u[i]; i++; }
+        kbuf[i] = 0;
+    }
+    __asm__ volatile("sti");
 
+    int size = ramfs_size(kbuf);
     if (size < 0 || size > 32768)
         return -1;
-    uint32_t base = TASK_LIN_BASE((int)(current - task));
     for (uint32_t off = 0; off < (uint32_t)size + 4095; off += 4096) {
         uint32_t phys = get_free_page();
         if (!phys)
             return -1;
         memset((void *)phys, 0, 4096);
-        mm_map_page(current->cr3, base + off, phys);
+        mm_map_page(current->cr3, TASK_LIN_BASE(slot) + off, phys);
     }
-    ramfs_read(kname, (char *)(base + 0), size);  /* 经任务线性直写 */
-
-    /* 用户栈: 0xE0000~0x100000 逐页分配挂映射 */
-    for (uint32_t off = 0xE0000; off < 0x100000; off += 4096) {
+    ramfs_read(kbuf, (char *)TASK_LIN_BASE(slot), size);
+    /* 用户栈: 0xF0000 往下 64KB(0xE0000~0x100000) */
+    for (uint32_t soff = 0xE0000; soff < 0x100000; soff += 4096) {
         uint32_t phys = get_free_page();
         if (!phys)
             return -1;
         memset((void *)phys, 0, 4096);
-        mm_map_page(current->cr3, base + off, phys);
+        mm_map_page(current->cr3, TASK_LIN_BASE(slot) + soff, phys);
     }
-    regs->eip    = 0;                  /* 段内偏移 0, LDT 基址加成 */
-    regs->esp    = USER_ESP;           /* 用户栈顶(空间内偏移) */
-    regs->ss     = USER_DS;
-    regs->cs     = USER_CS;
+
+    /* start_thread: 换段/换入口/换栈, iret 即新程序 */
+    regs->cs = 0x07;   regs->eip = 0;
+    regs->ss = 0x0F;   regs->esp = 0xF0000;
+    regs->ds = regs->es = regs->fs = regs->gs = 0x0F;
     regs->eflags = 0x202;
-    printk("[x2] set: eip=%x esp=%x cs=%x ss=%x\n",
-           regs->eip, regs->esp, regs->cs, regs->ss);
     return 0;
 }
 
-/* ---- day19: waitpid(课程简化: 收割任意僵尸) ---- */
+/* ---- wait4: 收割任意僵尸(课程简化) ---- */
 static int sys_wait4(int pid, int *status)
 {
     (void)pid;
@@ -236,12 +176,48 @@ static int sys_wait4(int pid, int *status)
     }
 }
 
-/* int 0x80 门: DPL=3 的中断门(0xEF), 用户态可触发 */
+int syscall_dispatch(struct pt_regs *regs)
+{
+    switch (regs->eax) {
+    /* 各 sys_* 内部自己做 UPTR 翻译, 这里传空间内偏移原值 */
+    case __NR_write:   return sys_write(regs->ebx, (const char *)(uintptr_t)regs->ecx, regs->edx);
+    case __NR_getpid:  return sys_getpid();
+    case __NR_exit:    exit(regs->ebx);   /* noreturn */
+    case __NR_read:    return sys_read(regs->ebx, (char *)(uintptr_t)regs->ecx, regs->edx);
+    case __NR_fork:    return sys_fork(regs);
+    case __NR_wait4:   return sys_wait4(regs->ebx, (int *)(uintptr_t)regs->ecx);
+    case __NR_execve:  return sys_execve((const char *)(uintptr_t)regs->ebx, regs);
+    default:
+        printk("[day31] unknown syscall %d\n", regs->eax);
+        return -1;
+    }
+}
+
+/* ---- 系统 TSS: GDT 5 号槽描述符由这里回填(head.S 里只是占位) ---- */
+static void tss_install(void)
+{
+    extern char gdt[], system_tss[];
+    uint32_t base = (uint32_t)(uintptr_t)system_tss;
+    uint32_t lim  = 103;
+    uint8_t *d = (uint8_t *)gdt + 5 * 8;
+    d[0] = lim & 0xFF;        d[1] = (lim >> 8) & 0xFF;
+    d[2] = base & 0xFF;       d[3] = (base >> 8) & 0xFF;
+    d[4] = (base >> 16) & 0xFF;
+    d[5] = 0x89;
+    d[6] = (lim >> 16) & 0x0F;
+    d[7] = (base >> 24) & 0xFF;
+    uint32_t *t = (uint32_t *)system_tss;
+    t[0] = 0;
+    t[1] = 0;                 /* esp0: 每次任务切换时更新(sched.c) */
+    t[2] = 0x10;
+    __asm__ volatile("ltr %%ax" : : "a"((uint16_t)0x28));
+}
+
 void syscall_init(void)
 {
     tss_install();
-    extern char system_call[];   /* kernel/syscall.S */
+    extern char system_call[];   /* kernel/syscall_entry.S */
     trap_install_gate(0x80, (uint32_t)(uintptr_t)system_call);
     extern struct idt_entry idt[256];
-    idt[0x80].type_attr = 0xEF;   /* DPL3: ring3 可以 int 0x80 */
+    idt[0x80].type_attr = 0xEF;  /* DPL3: ring3 可以 int 0x80 */
 }

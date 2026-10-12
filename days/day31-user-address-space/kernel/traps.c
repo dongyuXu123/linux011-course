@@ -66,7 +66,9 @@ void trap_dispatch(struct pt_regs *regs)
         if (pf_printed++ < 3) {
             uint32_t cr2;
             __asm__ volatile("movl %%cr2, %0" : "=r"(cr2));
-            printk("[pf] cr2=%x eip=%x err=%x\n", cr2, regs->eip, regs->err);
+            printk("[pf] cr2=%x eip=%x cs=%x esp=%x err=%x cur=%d\n",
+                   cr2, regs->eip, regs->cs, regs->esp, regs->err,
+                   (int)(current - task));
         }
     }
     con_puts("[day06] exception ");

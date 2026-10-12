@@ -109,7 +109,10 @@ uint32_t mm_pgdir_new(void)
     return dir;
 }
 
-/* 线性地址挂物理页: PDE 空则先分配页表页 */
+/* 线性地址挂物理页: PDE 空则先分配页表页。
+   0.11 在 switch_mm/invlpg 里做地址空间同步 —— 课程简化为: 每次改
+   PTE 后整卷重载 CR3, 让新映射立即生效(否则已缓存的旧 TLB 项会让
+   execve 装入的新程序页"看不见", CPU 继续执行旧映像/零页) */
 void mm_map_page(uint32_t pgdir_phys, uint32_t laddr, uint32_t phys)
 {
     uint32_t *pd = (uint32_t *)pgdir_phys;
@@ -122,6 +125,9 @@ void mm_map_page(uint32_t pgdir_phys, uint32_t laddr, uint32_t phys)
     }
     uint32_t *t = (uint32_t *)(pd[pde] & ~0xFFF);
     t[pte] = phys | 0x7;
+    uint32_t cr3;                       /* 重载当前 CR3 = 全 TLB 刷新 */
+    __asm__ volatile("movl %%cr3, %0" : "=r"(cr3));
+    __asm__ volatile("movl %0, %%cr3" : : "r"(cr3));
 }
 
 void mm_load_cr3(uint32_t phys)

@@ -1,5 +1,5 @@
 /* =====================================================================
- * day20 - kernel/selftest.c：里程碑自检
+ * day31 - kernel/selftest.c：里程碑自检
  * 字符终端形态的 linux011-course 至此五脏俱全: GRUB 引导 / 分页 /
  * 中断 / 时钟 / 键盘 tty / 物理页管理 / 任务调度 / fork-exec-wait /
  * 系统调用 / ramfs / 用户态 init。启动时跑一轮子系统自检并出报告。
@@ -12,7 +12,7 @@ extern volatile uint32_t jiffies;
 
 void selftest_run(void)
 {
-    printk("[day20] selftest begin\n");
+    printk("[day31] selftest begin\n");
 
     /* 1. 物理页: 分配-写 pattern-校验-释放 */
     static uint32_t pages[POOL_PROBE];
@@ -28,15 +28,15 @@ void selftest_run(void)
     for (int i = 0; i < POOL_PROBE; i++)
         if (pages[i])
             free_page(pages[i]);
-    printk("[day20] mm: %d-page alloc/verify/free %s\n",
+    printk("[day31] mm: %d-page alloc/verify/free %s\n",
            POOL_PROBE, ok ? "ok" : "FAILED");
 
     /* 2. 时钟: jiffies 在走 */
     uint32_t j0 = jiffies;
     while (jiffies == j0)
         __asm__ volatile("hlt");
-    printk("[day20] timer: jiffies ticking (%d)\n", jiffies - j0);
+    printk("[day31] timer: jiffies ticking (%d)\n", jiffies - j0);
 
-    printk("[day20] selftest: all subsystems ok\n");
-    printk("[day20] linux011-course 0.20 (terminal milestone)\n");
+    printk("[day31] selftest: all subsystems ok\n");
+    printk("[day31] linux011-course 0.31 (0.11-style address spaces)\n");
 }

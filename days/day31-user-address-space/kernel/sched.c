@@ -168,7 +168,7 @@ int do_fork(uint32_t caller_esp, const uint32_t *frame, int ndwords)
 
 void exit(int code)
 {
-    printk("[day12] task pid %d exit(%d)\n", current->pid, code);
+    printk("[day31] task pid %d exit(%d)\n", current->pid, code);
     current->exit_code = code;
     current->state = TASK_ZOMBIE;
     schedule();

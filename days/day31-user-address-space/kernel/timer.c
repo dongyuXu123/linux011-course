@@ -22,12 +22,6 @@ static void timer_interrupt(void *regs)
         printk("[day11] 1s heartbeat\n");
     if (jiffies == 200)
         printk("[day11] 2s heartbeat\n");
-    if (jiffies == 50) {
-        extern struct task_struct task[NR_TASKS];
-        printk("[ldt] %x %x %x %x sel=%x cr3=%x\n",
-               task[1].ldt[0], task[1].ldt[1], task[1].ldt[2], task[1].ldt[3],
-               task[1].ldt_sel, task[1].cr3);
-    }
     do_timer();          /* 时钟节拍 → 可能发生任务切换 */
 }
 
