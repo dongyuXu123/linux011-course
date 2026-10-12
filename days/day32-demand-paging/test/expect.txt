@@ -1,0 +1,12 @@
+[day32] selftest begin
+[day32] mm: 200-page alloc/verify/free ok
+[day32] selftest: all subsystems ok
+[day32] linux011-course 0.32 (demand paging)
+[day32] /sbin/init running in ring 3
+[init] forked child pid 2
+[day32] do_no_page: pid 2 off 0 <- hello
+[day32] hello world, exec'd from ramfs!
+[day32] do_no_page: pid 2 off 1000 <- zero page
+[day32] bss demand ok: Z
+[day32] my pid is 2
+[init] child 2 exited with 0
