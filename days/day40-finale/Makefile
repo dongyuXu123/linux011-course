@@ -47,5 +47,6 @@ $(BUILD)/minix.img: FORCE $(BUILD)/init.bin $(BUILD)/hello.bin $(BUILD)/gdemo.bi
 
 TIMEOUT := 120
 EXTRA := -drive file=$(BUILD)/minix.img,format=raw,if=ide
-PIXEL := 250,48=103818; 590,258=722b38; 170,461=303058; 60,468=303058
+MOUSE := -120,0;-100,-192;0,0,down-left;60,20;0,0,up-left
+PIXEL := 300,120=e8e8e8; 170,461=303058
 KEYS := f,i,l,e,s,ret,g,u,i,ret,w,spc,n,2,dot,t,x,t,spc,h,i,ret,c,a,t,spc,n,2,dot,t,x,t,ret,n,e,x,t,ret

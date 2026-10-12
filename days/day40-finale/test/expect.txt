@@ -12,6 +12,8 @@
 [day40] linux011-course 0.40 (finale: 0.11 subset + haribote desktop)
 [day37] layer system online
 [day37] first refresh done
+[day30] focus -> terminal
+[day30] window 'terminal' grabbed
 [day38] files: starting
 [day37] win 2 created at 20x200 280x110 'files'
 [day38] files: win id 2

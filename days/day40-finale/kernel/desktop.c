@@ -176,7 +176,6 @@ int gui_pointer_step(int cx, int cy)
     int changed = 0;
     if (press) {                                   /* 按下沿 */
         int hit = topmost_win_at(cx, cy);
-        printk("[hit] hit=%d nwins=%d\n", hit, nwins);
         if (hit >= 0) {
             changed = raise_to_top(hit);
             printk("[day30] focus -> %s\n", wins[nwins - 1].title);
