@@ -1,0 +1,19 @@
+[day33] blk: request queue ready (8 slots)
+[day33] ata: IDE disk ready, IRQ14 armed
+[day33] initrd read via request queue + IRQ14 (64KB)
+[day18] initrd: added init (793 bytes)
+[day18] initrd: added hello (230 bytes)
+[day33] selftest begin
+[day33] mm: 200-page alloc/verify/free ok
+[day33] blk: write/read-back via request queue ok
+[day33] selftest: all subsystems ok
+[day33] linux011-course 0.33 (block devices + request queue)
+[day33] /sbin/init running in ring 3
+[init] forked child pid 2
+[day33] do_no_page: pid 2 off 0 <- hello
+[day33] hello world, exec'd from ramfs!
+[day33] do_no_page: pid 2 off 1000 <- zero page
+[day33] bss demand ok: Z
+[day33] my pid is 2
+[day33] task pid 2 exit(0)
+[init] child 2 exited with 0
