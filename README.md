@@ -1,4 +1,9 @@
-# Linux 0.11 课程（30 天重构版）
+# Linux 0.11 课程（40 天重构版）
+
+> 以 [30dayMakeOS](https://github.com/yourtion/30dayMakeOS)《30 天自制操作系统》的进度规划与教学思想，
+> 重构 Linux 0.11 课程：**每天一个可运行产物，每课 QEMU 自动验收，GRUB 引导。
+> 前 30 天从 MBR 长出图形桌面；阶段二（day31-40）把内核子系统全面替换为 Linux 0.11 的真实设计，
+> 图形应用全部迁入用户态 —— 最终得到一个 0.11 血统的内核子集 + Haribote 式桌面。**
 
 > 以 [30dayMakeOS](https://github.com/yourtion/30dayMakeOS)《30 天自制操作系统》的进度规划与教学思想，
 > 重构 Linux 0.11 课程：**每天一个可运行产物，每课 QEMU 自动验收，GRUB 引导，最终做出图形桌面。**
@@ -26,7 +31,7 @@ make -C days/day30-release run
 
 | 轨道 | 位置 | 说明 |
 |---|---|---|
-| **动手轨（主线）** | `days/day01 … day30` | 30 天从 MBR 到图形桌面，每课完整可构建快照 |
+| **动手轨（主线）** | `days/day01 … day40` | 40 天从 MBR 到 0.11 内核子集 + 图形桌面，每课完整可构建快照 |
 | **精读轨（保留）** | `source/` + `docs/` | karottc/linux-0.11 原始源码（赵炯注释）+ 既有模块文档 |
 | **分课讲义** | `docs/days/dayNN.md` | 每课知识点/代码走读/验收说明/0.11 对照/实验建议 |
 | **课程设计** | `docs/course-plan.md` | 30 天大纲与重构方案 |
@@ -40,8 +45,12 @@ make -C days/day30-release run
 | 二 内核核心 | 08-14 | 键盘 tty → printk/vsprintf → 物理页管理 → 调度器 → fork/exit/wait → int 0x80 ring3 → 内核 shell |
 | 三 文件与用户态 | 15-20 | ramfs → cat/write → exec → initrd(ATA) → 用户态 init(fork/execve/waitpid) → 里程碑自检 |
 | 四 图形桌面 | 21-30 | VBE 帧缓冲 → 点阵字体 → 绘图 API → PS/2 鼠标 → 图层 → 窗口拖动 → 任务栏时钟 → 图形终端 → 应用窗口 → 发布版 |
+| 五 内核子系统 0.11 化 | 31-35 | 每进程地址空间(LDT/CR3/64MB) → 按需调页 do_no_page → 中断驱动块设备+request 队列 → Minix v1 fs(超级块/位图/inode/buffer cache) → 持久化写路径 + 0.11 文件 ABI(open/creat/lseek…) |
+| 六 0.11 × 图形合流 | 36-40 | TTY 行规程+双控制台 → 窗口 API 系统调用化 → 用户态图形应用(时钟/文件浏览器) → cat/w 落 Minix fs + 焦点轮转 → 收官 |
 
-最终成果（day30）：GRUB 引导 → VBE 640×480×32 桌面 → 多窗口 + 鼠标拖动 + 任务栏时钟 + 图形终端 + 内存监视应用。
+最终成果（day40）：GRUB 引导 → VBE 桌面（多窗口/鼠标/终端窗）→ ring3 用户态 init 与图形应用
+经 0.11 ABI（fork/execve/按需调页/open/read/write/lseek/窗口 API）工作在各自的 64MB 地址空间，
+文件落在真实 Minix v1 文件系统（中断驱动块设备 + buffer cache），TTY 行规程完成退格/^U/整行交付。
 
 ## 每课的自动验收
 

@@ -1,0 +1,21 @@
+[day30] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day34] buffer cache: 8 x 1KB buffers ready
+[day33] blk: request queue ready (8 slots)
+[day33] ata: IDE disk ready, IRQ14 armed
+[day34] minix v1 mounted: 64 inodes, 512 zones, data@6
+[day40] selftest begin
+[day40] mm: 200-page alloc/verify/free ok
+[day33] blk: write/read-back via request queue ok
+[day34] buffer cache: miss/hit/evict-writeback ok
+[day40] ldisc: backspace + ^U ok
+[day40] selftest: all subsystems ok
+[day40] linux011-course 0.40 (finale: 0.11 subset + haribote desktop)
+[day37] layer system online
+[day37] first refresh done
+[day38] files: starting
+[day37] win 2 created at 20x200 280x110 'files'
+[day38] files: win id 2
+[day38] app child 2 exited with 0
+[day39] w wrote 2 bytes to n2.txt
+[day39] cat: hi
+[day39] focus -> files
