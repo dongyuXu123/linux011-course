@@ -22,6 +22,7 @@ int  tty_q_count(void);
 
 static int sys_read(int fd, char *buf, int len);
 static int sys_fork(struct pt_regs *regs);
+extern char task_entry_stub[];
 static int sys_execve(const char *name, struct pt_regs *regs);
 static int sys_wait4(int pid, int *status);
 
@@ -183,7 +184,7 @@ static int sys_execve(const char *name, struct pt_regs *regs)
 {
     const char *kname = (const char *)UPTR(name);
     int size = ramfs_size(kname);
-    printk("[x] name='%s' size=%d\n", kname, size);
+
     if (size < 0 || size > 32768)
         return -1;
     uint32_t base = TASK_LIN_BASE((int)(current - task));
@@ -195,9 +196,7 @@ static int sys_execve(const char *name, struct pt_regs *regs)
         mm_map_page(current->cr3, base + off, phys);
     }
     ramfs_read(kname, (char *)(base + 0), size);  /* 经任务线性直写 */
-    printk("[x] v0=%x ldt=%x %x %x %x\n", *(uint32_t *)(base + 0),
-           task[2].ldt[0], task[2].ldt[1], task[2].ldt[2], task[2].ldt[3]);
-    printk("[x] iret eip=%x oesp=%x cs=%x\n", regs->eip, regs->oesp, regs->cs);
+
     /* 用户栈: 0xE0000~0x100000 逐页分配挂映射 */
     for (uint32_t off = 0xE0000; off < 0x100000; off += 4096) {
         uint32_t phys = get_free_page();

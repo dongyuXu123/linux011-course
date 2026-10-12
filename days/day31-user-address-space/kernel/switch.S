@@ -53,3 +53,19 @@ fork_child_resume2:
     xorl %eax, %eax
     popl %esp
     jmp  system_call_resume
+
+# exec 后的用户入口桩: 从"全新初始帧"进入, 开中断后 IRET 直达
+# 新程序入口(段内偏移 0, LDT 基址加成), 栈=空间内 0xF0000
+.global exec_trampoline
+exec_trampoline:
+    movl $0x0F, %eax
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
+    pushl $0x0F                 # ss
+    pushl $0xF0000              # esp (用户栈顶)
+    pushl $0x202                # eflags
+    pushl $0x07                 # cs (LDT code |RPL3)
+    pushl $0x0                  # eip: 新程序入口 = 空间偏移 0
+    iret
