@@ -1,0 +1,21 @@
+[day30] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day34] buffer cache: 8 x 1KB buffers ready
+[day33] blk: request queue ready (8 slots)
+[day33] ata: IDE disk ready, IRQ14 armed
+[day34] minix v1 mounted: 64 inodes, 512 zones, data@6
+[day37] selftest begin
+[day37] mm: 200-page alloc/verify/free ok
+[day33] blk: write/read-back via request queue ok
+[day34] buffer cache: miss/hit/evict-writeback ok
+[day37] ldisc: backspace + ^U ok
+[day37] selftest: all subsystems ok
+[day37] linux011-course 0.37 (gui window api)
+[day37] layer system online
+[day37] first refresh done
+[day37] creat notes.txt -> fd 2
+[day37] readback after lseek: ok (write persisted)
+[day37] gdemo: creating window
+[day37] win 3 created at 320x60 220x90 'gdemo'
+[day37] gdemo: win id 3
+[day37] win 3 write 20 chars, marker px=ff00ff
+[day37] gdemo child 2 exited with 0
