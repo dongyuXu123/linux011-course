@@ -1,0 +1,19 @@
+[day34] buffer cache: 8 x 1KB buffers ready
+[day33] blk: request queue ready (8 slots)
+[day33] ata: IDE disk ready, IRQ14 armed
+[day34] minix v1 mounted: 64 inodes, 512 zones, data@6
+[day34] selftest begin
+[day34] mm: 200-page alloc/verify/free ok
+[day33] blk: write/read-back via request queue ok
+[day34] buffer cache: miss/hit/evict-writeback ok
+[day34] selftest: all subsystems ok
+[day34] linux011-course 0.34 (Minix v1 filesystem)
+[day34] /sbin/init running in ring 3
+[init] forked child pid 2
+[day34] do_no_page: pid 2 off 0 <- hello
+[day34] hello world, exec'd from minix fs!
+[day34] do_no_page: pid 2 off 1000 <- zero page
+[day34] bss demand ok: Z
+[day34] my pid is 2
+[day34] task pid 2 exit(0)
+[init] child 2 exited with 0
