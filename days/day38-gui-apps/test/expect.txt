@@ -1,0 +1,25 @@
+[day30] framebuffer 640x480 pitch=2560 at fd000000 (mapped)
+[day34] buffer cache: 8 x 1KB buffers ready
+[day33] blk: request queue ready (8 slots)
+[day33] ata: IDE disk ready, IRQ14 armed
+[day34] minix v1 mounted: 64 inodes, 512 zones, data@6
+[day38] selftest begin
+[day38] mm: 200-page alloc/verify/free ok
+[day33] blk: write/read-back via request queue ok
+[day34] buffer cache: miss/hit/evict-writeback ok
+[day38] ldisc: backspace + ^U ok
+[day38] selftest: all subsystems ok
+[day38] linux011-course 0.38 (userland gui apps)
+[day37] layer system online
+[day37] first refresh done
+[day38] files: starting
+[day37] win 2 created at 20x200 280x110 'files'
+[day38] files: win id 2
+[day37] win 2 write 31 chars, marker px=ff00ff
+[day38] files: done, exit
+[day38] app child 2 exited with 0
+[day38] clock: starting
+[day37] win 3 created at 330x160 200x90 'clock'
+[day38] clock: win id 3
+[day38] clock: 5 ticks shown, exit
+[day38] app child 3 exited with 0
