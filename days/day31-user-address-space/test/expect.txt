@@ -4,3 +4,5 @@
 [day31] linux011-course 0.31 (0.11-style address spaces)
 [day31] /sbin/init running in ring 3
 [init] forked child pid 2
+[day31] hello world, exec'd from ramfs!
+[init] child 2 exited with 0
